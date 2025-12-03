@@ -34,9 +34,16 @@ export const register = async (req, res) => {
     // Don't return the password
     const { password: _, ...userWithoutPassword } = newUser;
 
+    // Issue JWT like in login for immediate session after registration
+    const token = jwt.sign(
+      { id: newUser.id, email: newUser.email, role: newUser.role },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
     return successResponse(
       res,
-      userWithoutPassword,
+      { token, user: userWithoutPassword },
       "User registered successfully",
       201
     );

@@ -1,8 +1,13 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Paleta oscura por defecto */
+  --background: #0a0a0a; /* dark */
+  --foreground: #e5e7eb; /* gray-200 */
+  --gold: #d4af37;
+  --gray-dark: #0f1115;
+  --gray-medium: #1a1d22;
+  --gray-light: #2a2f38;
 }
 
 @theme inline {
@@ -12,15 +17,25 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
+/* Opcional: tema claro si se requiere */
+@media (prefers-color-scheme: light) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #ffffff;
+    --foreground: #171717;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+html, body {
+  background-color: var(--background) !important;
+  color: var(--foreground) !important;
+  min-height: 100%;
 }
+
+/* Utilidades básicas de la paleta para usar sin Tailwind */
+.bg-dark { background-color: #0a0a0a; }
+.bg-gray-dark { background-color: var(--gray-dark); }
+.bg-gray-medium { background-color: var(--gray-medium); }
+.bg-gray-light { background-color: var(--gray-light); }
+.text-gold { color: var(--gold); }
+.bg-gold { background-color: var(--gold); }
+.text-dark { color: #0a0a0a; }
