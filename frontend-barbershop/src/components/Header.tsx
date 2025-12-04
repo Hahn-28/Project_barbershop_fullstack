@@ -1,27 +1,9 @@
 "use client";
-import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useAuthToken } from "@/lib/useAuthToken";
 export function Header() {
-  const [hasSession, setHasSession] = useState<boolean>(() => {
-    if (typeof window === "undefined") return false;
-    try {
-      return !!localStorage.getItem("auth_token");
-    } catch {
-      return false;
-    }
-  });
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-    const onStorage = (e: StorageEvent) => {
-      if (e.key === "auth_token") {
-        setHasSession(!!e.newValue);
-      }
-    };
-    window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
-  }, []);
+  // Subscribe to auth token changes without setState in effects
+  const hasSession = useAuthToken();
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id);
     if (element) {
@@ -34,7 +16,12 @@ export function Header() {
       <div className="max-w-7xl mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <div className="flex items-center gap-3 cursor-pointer" onClick={() => scrollToSection('inicio')}>
+          <button
+            type="button"
+            aria-label="Ir al inicio"
+            className="flex items-center gap-3 cursor-pointer bg-transparent p-0 border-0"
+            onClick={() => scrollToSection('inicio')}
+          >
             <div className="bg-gold p-2 rounded">
               <span className="w-6 h-6 text-dark text-lg">✂️</span>
             </div>
@@ -42,7 +29,7 @@ export function Header() {
               <h3 className="text-white">ÉLITE</h3>
               <p className="text-xs text-gold">Premium Barber</p>
             </div>
-          </div>
+          </button>
 
           {/* Navigation */}
           <nav className="hidden md:flex items-center gap-8">
@@ -67,15 +54,12 @@ export function Header() {
           </nav>
 
           {/* CTA Button: Login/Dashboard */}
-          {mounted && (
-            <Link
-              href={hasSession ? "/dashboard" : "/auth/login"}
-              className="bg-gold text-dark px-6 py-2.5 rounded hover:bg-gold/90 transition-all duration-300 shadow-lg hover:shadow-gold/50"
-              suppressHydrationWarning
-            >
-              {hasSession ? "Dashboard" : "Iniciar sesión"}
-            </Link>
-          )}
+          <Link
+            href={hasSession ? "/dashboard" : "/auth/login"}
+            className="bg-gold text-dark px-6 py-2.5 rounded hover:bg-gold/90 transition-all duration-300 shadow-lg hover:shadow-gold/50"
+          >
+            {hasSession ? "Dashboard" : "Iniciar sesión"}
+          </Link>
         </div>
       </div>
     </header>

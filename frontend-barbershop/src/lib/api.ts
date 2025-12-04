@@ -102,9 +102,15 @@ export const api = {
 export function saveToken(token: string) {
   if (typeof window === "undefined") return;
   localStorage.setItem("auth_token", token);
+  try {
+    window.dispatchEvent(new Event("auth_token_change"));
+  } catch {}
 }
 
 export function clearToken() {
   if (typeof window === "undefined") return;
   localStorage.removeItem("auth_token");
+  try {
+    window.dispatchEvent(new Event("auth_token_change"));
+  } catch {}
 }
