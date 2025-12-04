@@ -1,116 +1,94 @@
-export const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+const API_BASE = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000").replace(/\/$/, "");
 
-function getToken() {
+function getToken(): string | null {
   if (typeof window === "undefined") return null;
-  return localStorage.getItem("auth_token");
+  try {
+    return localStorage.getItem("auth_token");
+  } catch {
+    return null;
+  }
 }
 
-async function request<T = unknown>(path: string, options: RequestInit = {}): Promise<T> {
+type JsonValue = unknown;
+type ApiEnvelope<T = JsonValue> = { success?: boolean; message?: string; data?: T } | T;
+
+async function request<T = JsonValue>(path: string, options: RequestInit = {}): Promise<T> {
   const token = getToken();
-  // Use a plain record to avoid indexing issues with HeadersInit union type
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     ...(options.headers as Record<string, string> | undefined || {}),
   };
   if (token) headers.Authorization = `Bearer ${token}`;
 
-  const res = await fetch(`${API_URL}${path}`, {
+  const res = await fetch(`${API_BASE}${path.startsWith("/") ? path : `/${path}`}`, {
     ...options,
     headers,
     credentials: "include",
   });
 
-  const contentType = res.headers.get("content-type");
-  const isJson = contentType && contentType.includes("application/json");
-  const data = isJson ? await res.json() : await res.text();
+  const contentType = res.headers.get("content-type") || "";
+  const isJson = contentType.includes("application/json");
+  const raw = isJson ? await res.json() : await res.text();
 
   if (!res.ok) {
-    const message = isJson ? data?.message || JSON.stringify(data) : String(data);
-    throw new Error(message || `Error ${res.status}`);
+    const message = isJson ? (raw as any)?.message || JSON.stringify(raw) : String(raw);
+    throw new Error(message || `HTTP ${res.status}`);
   }
-  return data as T;
+
+  const body = raw as ApiEnvelope<T>;
+  if (body && typeof body === "object" && "data" in (body as any)) {
+    return (body as any).data as T;
+  }
+  return body as T;
 }
+
+const http = {
+  get: <T = JsonValue>(path: string) => request<T>(path, { method: "GET" }),
+  post: <T = JsonValue>(path: string, payload?: unknown) =>
+    request<T>(path, { method: "POST", body: payload ? JSON.stringify(payload) : undefined }),
+  put: <T = JsonValue>(path: string, payload?: unknown) =>
+    request<T>(path, { method: "PUT", body: payload ? JSON.stringify(payload) : undefined }),
+  del: <T = JsonValue>(path: string) => request<T>(path, { method: "DELETE" }),
+};
 
 export const api = {
   // Auth
-  register: (payload: { name: string; email: string; password: string }) =>
-    request("/auth/register", {
-      method: "POST",
-      body: JSON.stringify(payload),
-    }),
-  login: (payload: { email: string; password: string }) =>
-    request("/auth/login", {
-      method: "POST",
-      body: JSON.stringify(payload),
-    }),
+  register: (payload: { name: string; email: string; password: string }) => http.post("/auth/register", payload),
+  login: (payload: { email: string; password: string }) => http.post("/auth/login", payload),
   createUser: (payload: { name: string; email: string; password: string; role: "ADMIN" | "WORKER" | "CLIENT" }) =>
-    request("/auth/create-user", {
-      method: "POST",
-      body: JSON.stringify(payload),
-    }),
+    http.post("/auth/create-user", payload),
 
   // Services
-  async getServices() {
-    type SuccessResponse<T> = { success: boolean; message: string; data: T };
-    const res = await request<SuccessResponse<unknown> | unknown>("/services");
-    const data = res && typeof res === "object" && "data" in res
-      ? (res as SuccessResponse<unknown>).data
-      : res;
-    return Array.isArray(data) ? (data as unknown[]) : [];
-  },
+  getServices: () => http.get<unknown[]>("/services"),
   createService: (payload: { name: string; description?: string; price: number; duration?: number }) =>
-    request("/services", { method: "POST", body: JSON.stringify(payload) }),
-  updateService: (id: number, payload: Record<string, unknown>) =>
-    request(`/services/${id}`, { method: "PUT", body: JSON.stringify(payload) }),
-  deleteService: (id: number) => request(`/services/${id}`, { method: "DELETE" }),
+    http.post("/services", payload),
+  updateService: (id: number, payload: Record<string, unknown>) => http.put(`/services/${id}`, payload),
+  deleteService: (id: number) => http.del(`/services/${id}`),
 
   // Bookings
   createBooking: (payload: { serviceId: number; date: string; time: string; notes?: string }) =>
-    request("/bookings", { method: "POST", body: JSON.stringify(payload) }),
-  async myBookings() {
-    type SuccessResponse<T> = { success: boolean; message: string; data: T };
-    const res = await request<SuccessResponse<unknown> | unknown>("/bookings/me");
-    const data = res && typeof res === "object" && "data" in res
-      ? (res as SuccessResponse<unknown>).data
-      : res;
-    return Array.isArray(data) ? (data as unknown[]) : [];
-  },
-  async allBookings() {
-    type SuccessResponse<T> = { success: boolean; message: string; data: T };
-    const res = await request<SuccessResponse<unknown> | unknown>("/bookings");
-    const data = res && typeof res === "object" && "data" in res
-      ? (res as SuccessResponse<unknown>).data
-      : res;
-    return Array.isArray(data) ? (data as unknown[]) : [];
-  },
-  updateBookingStatus: (id: number, status: string) =>
-    request(`/bookings/${id}/status`, { method: "PUT", body: JSON.stringify({ status }) }),
+    http.post("/bookings", payload),
+  myBookings: () => http.get<unknown[]>("/bookings/me"),
+  allBookings: () => http.get<unknown[]>("/bookings"),
+  updateBookingStatus: (id: number, status: string) => http.put(`/bookings/${id}/status`, { status }),
 
   // Users (admin)
-  async listUsers() {
-    type SuccessResponse<T> = { success: boolean; message: string; data: T };
-    const res = await request<SuccessResponse<unknown> | unknown>("/users");
-    const data = res && typeof res === "object" && "data" in res
-      ? (res as SuccessResponse<unknown>).data
-      : res;
-    return Array.isArray(data) ? (data as unknown[]) : [];
-  },
-  updateUserStatus: (id: number, active: boolean) =>
-    request(`/users/${id}/status`, { method: "PUT", body: JSON.stringify({ active }) }),
+  listUsers: () => http.get<unknown[]>("/users"),
+  updateUserStatus: (id: number, active: boolean) => http.put(`/users/${id}/status`, { active }),
 };
 
 export function saveToken(token: string) {
   if (typeof window === "undefined") return;
-  localStorage.setItem("auth_token", token);
   try {
+    localStorage.setItem("auth_token", token);
     window.dispatchEvent(new Event("auth_token_change"));
   } catch {}
 }
 
 export function clearToken() {
   if (typeof window === "undefined") return;
-  localStorage.removeItem("auth_token");
   try {
+    localStorage.removeItem("auth_token");
     window.dispatchEvent(new Event("auth_token_change"));
   } catch {}
 }
