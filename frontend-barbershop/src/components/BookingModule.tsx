@@ -56,18 +56,37 @@ export function BookingModule({ onBookingComplete }: BookingModuleProps) {
       const svc = services.find((s) => s.name === selectedService);
       if (!svc) throw new Error("Servicio inválido");
       if (!selectedDate || !selectedTime) throw new Error("Selecciona fecha y hora en el calendario");
+      
+      console.log("Creating booking:", { 
+        serviceId: svc.id, 
+        date: selectedDate, 
+        time: selectedTime,
+        selectedBarber 
+      });
+      
       const dateIso = `${selectedDate}T${selectedTime}:00`;
-      await api.createBooking({ serviceId: svc.id, date: dateIso, time: selectedTime, notes: selectedBarber });
-      alert("Reserva creada correctamente");
+      const result = await api.createBooking({ 
+        serviceId: svc.id, 
+        date: dateIso, 
+        time: selectedTime, 
+        notes: selectedBarber 
+      });
+      
+      console.log("Booking created successfully:", result);
+      alert("¡Reserva creada correctamente!");
       onBookingComplete?.();
+      
+      // Reset form
       setStep(1);
       setSelectedService('');
       setSelectedBarber('');
       setSelectedDate('');
       setSelectedTime('');
     } catch (err: unknown) {
+      console.error("Error creating booking:", err);
       const message = err instanceof Error ? err.message : "No se pudo crear la reserva";
       setError(message);
+      alert(`Error: ${message}`);
     } finally {
       setLoading(false);
     }
@@ -223,6 +242,14 @@ export function BookingModule({ onBookingComplete }: BookingModuleProps) {
                   </p>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Error Message */}
+          {error && (
+            <div className="mt-4 p-4 bg-red-500/10 border border-red-500/40 rounded-lg flex items-center gap-2">
+              <span className="text-red-500 text-xl">⚠️</span>
+              <p className="text-red-300">{error}</p>
             </div>
           )}
 

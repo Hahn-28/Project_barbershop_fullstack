@@ -2,8 +2,8 @@
 import { useMemo, useRef } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import timeGridPlugin from '@fullcalendar/timegrid';
-import interactionPlugin, { DateSelectArg } from '@fullcalendar/interaction';
-import type { EventInput } from '@fullcalendar/core';
+import interactionPlugin from '@fullcalendar/interaction';
+import type { EventInput, DateSelectArg } from '@fullcalendar/core';
 
 interface CalendarProps {
   readonly onSlotSelect: (date: string, time: string) => void;
