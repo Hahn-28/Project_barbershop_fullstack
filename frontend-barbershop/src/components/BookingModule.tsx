@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { api } from "@/lib/api";
 import { Toaster } from "@/components/ui/sonner";
-import { Scissors, User, CalendarDays, Clock, Check } from 'lucide-react';
+import { Scissors, User, Clock, Check } from 'lucide-react';
 import { Calendar } from './Calendar';
 
 interface BookingModuleProps {
@@ -15,6 +15,7 @@ export function BookingModule({ onBookingComplete }: BookingModuleProps) {
   const [selectedBarber, setSelectedBarber] = useState('');
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
+  const totalSteps = 3;
 
   type Service = { id: number; name: string; description?: string; price?: number };
   const [services, setServices] = useState<Service[]>([]);
@@ -40,13 +41,8 @@ export function BookingModule({ onBookingComplete }: BookingModuleProps) {
     { id: 'ricardo', name: 'Ricardo Hernández' },
   ];
 
-  const availableTimes = [
-    '09:00', '10:00', '11:00', '12:00',
-    '14:00', '15:00', '16:00', '17:00', '18:00'
-  ];
-
   const handleNext = () => {
-    if (step < 4) setStep(step + 1);
+    if (step < totalSteps) setStep(step + 1);
   };
 
   const handleBack = () => {
@@ -59,6 +55,7 @@ export function BookingModule({ onBookingComplete }: BookingModuleProps) {
     try {
       const svc = services.find((s) => s.name === selectedService);
       if (!svc) throw new Error("Servicio inválido");
+      if (!selectedDate || !selectedTime) throw new Error("Selecciona fecha y hora en el calendario");
       const dateIso = `${selectedDate}T${selectedTime}:00`;
       await api.createBooking({ serviceId: svc.id, date: dateIso, time: selectedTime, notes: selectedBarber });
       alert("Reserva creada correctamente");
@@ -79,8 +76,7 @@ export function BookingModule({ onBookingComplete }: BookingModuleProps) {
   const canProceed = () => {
     if (step === 1) return selectedService !== '';
     if (step === 2) return selectedBarber !== '';
-    if (step === 3) return selectedDate !== '';
-    if (step === 4) return selectedTime !== '';
+    if (step === 3) return selectedDate !== '' && selectedTime !== '';
     return false;
   };
 
@@ -103,14 +99,13 @@ export function BookingModule({ onBookingComplete }: BookingModuleProps) {
           <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-gray-light/20 -translate-y-1/2 -z-10"></div>
           <div 
             className="absolute top-1/2 left-0 h-0.5 bg-gold -translate-y-1/2 -z-10 transition-all duration-500"
-            style={{ width: `${((step - 1) / 3) * 100}%` }}
+            style={{ width: `${((step - 1) / (totalSteps - 1)) * 100}%` }}
           ></div>
 
           {[
             { num: 1, icon: Scissors, label: 'Servicio' },
             { num: 2, icon: User, label: 'Barbero' },
-            { num: 3, icon: CalendarDays, label: 'Fecha' },
-            { num: 4, icon: Clock, label: 'Hora' },
+            { num: 3, icon: Clock, label: 'Fecha y hora' },
           ].map((s) => {
             const IconComponent = s.icon;
             return (
@@ -202,48 +197,32 @@ export function BookingModule({ onBookingComplete }: BookingModuleProps) {
             </div>
           )}
 
-          {/* Step 3: Select Date */}
+          {/* Step 3: Select Date & Time via calendar */}
           {step === 3 && (
             <div>
-              <h3 className="text-white mb-6">Selecciona la fecha</h3>
+              <h3 className="text-white mb-6">Selecciona fecha y hora</h3>
               <Calendar 
-                onDateSelect={(date) => setSelectedDate(date)}
+                onSlotSelect={(date, time) => {
+                  setSelectedDate(date);
+                  setSelectedTime(time);
+                }}
                 selectedDate={selectedDate}
+                selectedTime={selectedTime}
               />
-              {selectedDate && (
-                <div className="mt-4 p-4 bg-gold/10 border border-gold/30 rounded-lg">
-                  <p className="text-gold text-center">
-                    Fecha seleccionada: {new Date(selectedDate).toLocaleDateString('es-ES', { 
-                      weekday: 'long', 
-                      year: 'numeric', 
-                      month: 'long', 
-                      day: 'numeric' 
+              {selectedDate && selectedTime && (
+                <div className="mt-4 p-4 bg-gold/10 border border-gold/30 rounded-lg text-center">
+                  <p className="text-gold">
+                    Reserva seleccionada: {new Date(`${selectedDate}T${selectedTime}:00`).toLocaleString('es-ES', {
+                      weekday: 'long',
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
                     })}
                   </p>
                 </div>
               )}
-            </div>
-          )}
-
-          {/* Step 4: Select Time */}
-          {step === 4 && (
-            <div>
-              <h3 className="text-white mb-6">Elige la hora</h3>
-              <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
-                {availableTimes.map((time) => (
-                  <button
-                    key={time}
-                    onClick={() => setSelectedTime(time)}
-                    className={`p-4 rounded-lg border-2 transition-all duration-300 ${
-                      selectedTime === time
-                        ? 'border-gold bg-gold/10 text-gold'
-                        : 'border-gray-light/20 bg-gray-dark text-white hover:border-gold/50'
-                    }`}
-                  >
-                    {time}
-                  </button>
-                ))}
-              </div>
             </div>
           )}
 
@@ -261,7 +240,7 @@ export function BookingModule({ onBookingComplete }: BookingModuleProps) {
               ← Atrás
             </button>
 
-            {step < 4 ? (
+            {step < totalSteps ? (
               <button
                 onClick={handleNext}
                 disabled={!canProceed()}

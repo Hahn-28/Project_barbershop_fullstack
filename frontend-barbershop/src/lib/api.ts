@@ -86,7 +86,7 @@ export const api = {
 
   // Users (admin)
   listUsers: () => http.get<unknown[]>("/users"),
-  updateUserStatus: (id: number, active: boolean) => http.put(`/users/${id}/status`, { active }),
+  updateUserStatus: (id: number, isActive: boolean) => http.put(`/users/${id}/status`, { isActive }),
 };
 
 export function saveToken(token: string) {

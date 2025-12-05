@@ -7,8 +7,13 @@ export type User = {
   name: string;
   email: string;
   role: 'ADMIN' | 'WORKER' | 'CLIENT';
-  active?: boolean;
+  isActive?: boolean;
+  phone?: string;
+  avatarUrl?: string;
+  bio?: string;
+  specialties?: string;
   createdAt?: string;
+  updatedAt?: string;
 };
 
 export function useUsers() {
@@ -49,11 +54,11 @@ export function useUsers() {
     }
   }, []);
 
-  const updateUserStatus = useCallback(async (id: number, active: boolean) => {
+  const updateUserStatus = useCallback(async (id: number, isActive: boolean) => {
     try {
-      await api.updateUserStatus(id, active);
-      setUsers(users.map(u => u.id === id ? { ...u, active } : u));
-      toast.success(active ? "Usuario activado" : "Usuario desactivado");
+      await api.updateUserStatus(id, isActive);
+      setUsers(users.map(u => u.id === id ? { ...u, isActive } : u));
+      toast.success(isActive ? "Usuario activado" : "Usuario desactivado");
     } catch (err: unknown) {
       const message = handleError(err);
       console.error("Error updating user status:", err);
