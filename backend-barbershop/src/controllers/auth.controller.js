@@ -1,11 +1,12 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import passport from "../config/passport.js";
 import prisma from "../config/prisma.js";
 import { errorResponse, successResponse } from "../utils/response.js";
 
 export const register = async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role, phone, avatarUrl } = req.body;
 
     if (role && role !== "CLIENT") {
       return errorResponse(
@@ -28,6 +29,8 @@ export const register = async (req, res) => {
         email,
         password: hashedPassword,
         role: "CLIENT", // Force CLIENT role
+        phone,
+        avatarUrl,
       },
     });
 
@@ -80,7 +83,8 @@ export const login = async (req, res) => {
 
 export const createUser = async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role, phone, avatarUrl, bio, specialties } =
+      req.body;
 
     if (!["ADMIN", "WORKER"].includes(role)) {
       return errorResponse(
@@ -97,13 +101,37 @@ export const createUser = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // Preparar datos según el rol
+    const userData = {
+      name,
+      email,
+      password: hashedPassword,
+      role,
+    };
+
+    // ADMIN: phone es opcional, bio y specialties no se usan
+    if (role === "ADMIN") {
+      if (phone) userData.phone = phone;
+      if (avatarUrl) userData.avatarUrl = avatarUrl;
+    }
+
+    // WORKER: phone, avatarUrl, bio y specialties son requeridos
+    if (role === "WORKER") {
+      if (!bio || !specialties) {
+        return errorResponse(
+          res,
+          "WORKER role requires bio and specialties",
+          400
+        );
+      }
+      userData.phone = phone;
+      userData.avatarUrl = avatarUrl;
+      userData.bio = bio;
+      userData.specialties = specialties;
+    }
+
     const newUser = await prisma.user.create({
-      data: {
-        name,
-        email,
-        password: hashedPassword,
-        role,
-      },
+      data: userData,
     });
 
     const { password: _, ...userWithoutPassword } = newUser;
@@ -117,4 +145,46 @@ export const createUser = async (req, res) => {
   } catch (error) {
     return errorResponse(res, "User creation failed", 500, error);
   }
+};
+
+// Iniciar autenticación con Google OAuth
+export const googleAuth = passport.authenticate("google", {
+  scope: ["profile", "email"],
+});
+
+// Callback de Google OAuth
+export const googleCallback = (req, res, next) => {
+  passport.authenticate("google", { session: false }, async (err, user) => {
+    if (err) {
+      return errorResponse(res, "Google authentication failed", 500, err);
+    }
+    if (!user) {
+      return errorResponse(res, "Google authentication failed", 401);
+    }
+
+    try {
+      // Generar JWT para el usuario autenticado
+      const token = jwt.sign(
+        { id: user.id, email: user.email, role: user.role },
+        process.env.JWT_SECRET,
+        { expiresIn: "7d" }
+      );
+
+      // Redirigir al frontend con el token
+      const frontendUrl =
+        process.env.FRONTEND_ORIGIN || "http://localhost:3000";
+      res.redirect(
+        `${frontendUrl}/auth/success?token=${token}&user=${encodeURIComponent(
+          JSON.stringify({
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+          })
+        )}`
+      );
+    } catch (error) {
+      return errorResponse(res, "Token generation failed", 500, error);
+    }
+  })(req, res, next);
 };
