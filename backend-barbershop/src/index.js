@@ -1,6 +1,8 @@
 import cors from "cors";
 import dotenv from "dotenv";
 import express from "express";
+import session from "express-session";
+import passport from "./config/passport.js";
 import authRoutes from "./routes/auth.routes.js";
 import bookingRoutes from "./routes/bookings.routes.js";
 import serviceRoutes from "./routes/services.routes.js";
@@ -19,6 +21,24 @@ app.use(
     credentials: true,
   })
 );
+
+// Configurar sesión para Passport
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: false, // true en producción con HTTPS
+      maxAge: 24 * 60 * 60 * 1000, // 24 horas
+    },
+  })
+);
+
+// Inicializar Passport
+app.use(passport.initialize());
+app.use(passport.session());
+
 app.use(express.json());
 
 // Routes
