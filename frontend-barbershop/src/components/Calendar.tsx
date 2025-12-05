@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from 'react';
+import { useRef } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -7,9 +7,9 @@ import interactionPlugin, { DateClickArg } from '@fullcalendar/interaction';
 import type { EventClickArg, EventInput } from '@fullcalendar/core';
 
 interface CalendarProps {
-  onDateSelect: (date: string) => void;
-  selectedDate?: string;
-  bookings?: EventInput[];
+  readonly onDateSelect: (date: string) => void;
+  readonly selectedDate?: string;
+  readonly bookings?: EventInput[];
 }
 
 export function Calendar({ onDateSelect, selectedDate, bookings = [] }: CalendarProps) {

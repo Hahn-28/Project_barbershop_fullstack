@@ -1,19 +1,22 @@
 "use client";
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { api } from "@/lib/api";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Toaster, toast } from "@/components/ui/sonner";
+import { Toaster } from "@/components/ui/sonner";
 import { Scissors, User, CalendarDays, Clock, Check } from 'lucide-react';
 import { Calendar } from './Calendar';
 
-export function BookingModule({ onBookingComplete }: { onBookingComplete?: () => void }) {
+interface BookingModuleProps {
+  readonly onBookingComplete?: () => void;
+}
+
+export function BookingModule({ onBookingComplete }: BookingModuleProps) {
   const [step, setStep] = useState(1);
   const [selectedService, setSelectedService] = useState('');
   const [selectedBarber, setSelectedBarber] = useState('');
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
 
-  type Service = { id: number; name: string; price?: number };
+  type Service = { id: number; name: string; description?: string; price?: number };
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -25,7 +28,8 @@ export function BookingModule({ onBookingComplete }: { onBookingComplete?: () =>
         setServices(s);
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : "No se pudieron cargar servicios";
-        setError(message);
+        // Error is caught, intentionally not shown in UI for this view
+        console.error(message);
       }
     })();
   }, []);
@@ -162,7 +166,7 @@ export function BookingModule({ onBookingComplete }: { onBookingComplete?: () =>
                         </div>
                       </div>
                       {selectedService === service.name && (
-                        <Check className="w-6 h-6 text-gold flex-shrink-0" />
+                        <Check className="w-6 h-6 text-gold shrink-0" />
                       )}
                     </div>
                   </button>

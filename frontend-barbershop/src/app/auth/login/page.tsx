@@ -11,9 +11,7 @@ import { api, saveToken } from "@/lib/api";
 type LoginResponse = {
   success: boolean;
   message: string;
-  data?: {
-    token?: string;
-  };
+  token?: string;
 };
 
 export default function Page() {
@@ -35,7 +33,7 @@ export default function Page() {
     setLoading(true);
     try {
       const res = (await api.login({ email, password })) as LoginResponse;
-      const token = res?.data?.token;
+      const token = res?.token;
       if (!token) throw new Error("Token no recibido");
       saveToken(token);
       router.replace("/dashboard");
