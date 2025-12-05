@@ -75,6 +75,11 @@ export function BookingsList({
                 <div>
                   <h4 className="text-white mb-1">{b.service?.name || `Servicio #${b.serviceId}`}</h4>
                   <p className="text-gray-400">{new Date(b.date).toLocaleString()}</p>
+                  {(b.worker || b.notes) && (
+                    <p className="text-sm text-gray-300 mt-2">
+                      Barbero: <span className="text-gold">{b.worker?.name || b.notes}</span>
+                    </p>
+                  )}
                 </div>
                 <div className="text-right">
                   {b.service?.price != null && (

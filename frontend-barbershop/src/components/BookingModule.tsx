@@ -13,12 +13,15 @@ export function BookingModule({ onBookingComplete }: BookingModuleProps) {
   const [step, setStep] = useState(1);
   const [selectedService, setSelectedService] = useState('');
   const [selectedBarber, setSelectedBarber] = useState('');
+  const [selectedWorkerId, setSelectedWorkerId] = useState<number | null>(null);
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
   const totalSteps = 3;
 
   type Service = { id: number; name: string; description?: string; price?: number };
   const [services, setServices] = useState<Service[]>([]);
+  type Worker = { id: number; name: string; bio?: string; specialties?: string; phone?: string; avatarUrl?: string };
+  const [workers, setWorkers] = useState<Worker[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -35,11 +38,19 @@ export function BookingModule({ onBookingComplete }: BookingModuleProps) {
     })();
   }, []);
 
-  const barbers = [
-    { id: 'carlos', name: 'Carlos Méndez' },
-    { id: 'miguel', name: 'Miguel Ángel Torres' },
-    { id: 'ricardo', name: 'Ricardo Hernández' },
-  ];
+  // Load workers for selection
+  useEffect(() => {
+    (async () => {
+      try {
+        const w = await api.listWorkers() as Worker[];
+        setWorkers(w || []);
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : "No se pudieron cargar barberos";
+        console.error(message);
+        setWorkers([]);
+      }
+    })();
+  }, []);
 
   const handleNext = () => {
     if (step < totalSteps) setStep(step + 1);
@@ -55,10 +66,12 @@ export function BookingModule({ onBookingComplete }: BookingModuleProps) {
     try {
       const svc = services.find((s) => s.name === selectedService);
       if (!svc) throw new Error("Servicio inválido");
+      if (!selectedWorkerId) throw new Error("Selecciona un barbero");
       if (!selectedDate || !selectedTime) throw new Error("Selecciona fecha y hora en el calendario");
       
       console.log("Creating booking:", { 
         serviceId: svc.id, 
+        workerId: selectedWorkerId,
         date: selectedDate, 
         time: selectedTime,
         selectedBarber 
@@ -67,10 +80,11 @@ export function BookingModule({ onBookingComplete }: BookingModuleProps) {
       const dateIso = `${selectedDate}T${selectedTime}:00`;
       const result = await api.createBooking({ 
         serviceId: svc.id, 
+        workerId: selectedWorkerId,
         date: dateIso, 
         time: selectedTime, 
         notes: selectedBarber 
-      });
+      } as any);
       
       console.log("Booking created successfully:", result);
       alert("¡Reserva creada correctamente!");
@@ -80,6 +94,7 @@ export function BookingModule({ onBookingComplete }: BookingModuleProps) {
       setStep(1);
       setSelectedService('');
       setSelectedBarber('');
+      setSelectedWorkerId(null);
       setSelectedDate('');
       setSelectedTime('');
     } catch (err: unknown) {
@@ -94,7 +109,7 @@ export function BookingModule({ onBookingComplete }: BookingModuleProps) {
 
   const canProceed = () => {
     if (step === 1) return selectedService !== '';
-    if (step === 2) return selectedBarber !== '';
+    if (step === 2) return selectedWorkerId != null;
     if (step === 3) return selectedDate !== '' && selectedTime !== '';
     return false;
   };
@@ -193,25 +208,37 @@ export function BookingModule({ onBookingComplete }: BookingModuleProps) {
           {step === 2 && (
             <div>
               <h3 className="text-white mb-6">Elige tu barbero</h3>
-              <div className="grid grid-cols-1 gap-4">
-                {barbers.map((barber) => (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {workers.map((barber) => (
                   <button
                     key={barber.id}
-                    onClick={() => setSelectedBarber(barber.name)}
+                    onClick={() => { setSelectedBarber(barber.name); setSelectedWorkerId(barber.id); }}
                     className={`p-6 rounded-lg border-2 text-left transition-all duration-300 ${
-                      selectedBarber === barber.name
+                      selectedWorkerId === barber.id
                         ? 'border-gold bg-gold/10'
                         : 'border-gray-light/20 bg-gray-dark hover:border-gold/50'
                     }`}
                   >
-                    <div className="flex items-center justify-between">
-                      <h4 className="text-white">{barber.name}</h4>
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="text-white font-semibold">{barber.name}</h4>
                       {selectedBarber === barber.name && (
                         <Check className="w-6 h-6 text-gold" />
                       )}
                     </div>
+                    {barber.specialties && (
+                      <p className="text-gold text-sm mb-1">{barber.specialties}</p>
+                    )}
+                    {barber.bio && (
+                      <p className="text-gray-400 text-sm line-clamp-2 mb-2">{barber.bio}</p>
+                    )}
+                    {barber.phone && (
+                      <p className="text-gray-500 text-xs">Tel: {barber.phone}</p>
+                    )}
                   </button>
                 ))}
+                {workers.length === 0 && (
+                  <p className="text-gray-400">No hay barberos disponibles.</p>
+                )}
               </div>
             </div>
           )}

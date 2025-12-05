@@ -78,15 +78,19 @@ export const api = {
   deleteService: (id: number) => http.del(`/services/${id}`),
 
   // Bookings
-  createBooking: (payload: { serviceId: number; date: string; time: string; notes?: string }) =>
+  createBooking: (payload: { serviceId: number; workerId: number; date: string; time: string; notes?: string }) =>
     http.post("/bookings", payload),
   myBookings: () => http.get<unknown[]>("/bookings/me"),
+  workerBookings: () => http.get<unknown[]>("/bookings/worker"),
   allBookings: () => http.get<unknown[]>("/bookings"),
   updateBookingStatus: (id: number, status: string) => http.put(`/bookings/${id}/status`, { status }),
 
   // Users (admin)
   listUsers: () => http.get<unknown[]>("/users"),
   updateUserStatus: (id: number, isActive: boolean) => http.put(`/users/${id}/status`, { isActive }),
+
+  // Workers (client)
+  listWorkers: () => http.get<unknown[]>("/users/workers"),
 };
 
 export function saveToken(token: string) {

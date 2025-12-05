@@ -9,20 +9,22 @@ interface CreateWorkerModalProps {
   isOpen: boolean;
   isLoading: boolean;
   onClose: () => void;
-  onSubmit: (data: { name: string; email: string; password: string }) => Promise<boolean>;
+  onSubmit: (data: { name: string; email: string; password: string; bio: string; specialties: string }) => Promise<boolean>;
 }
 
 export function CreateWorkerModal({ isOpen, isLoading, onClose, onSubmit }: CreateWorkerModalProps) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [bio, setBio] = useState('');
+  const [specialties, setSpecialties] = useState('');
   const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
-    if (!name || !email || !password) {
+    if (!name || !email || !password || !bio || !specialties) {
       setError('Por favor completa todos los campos');
       return;
     }
@@ -33,11 +35,13 @@ export function CreateWorkerModal({ isOpen, isLoading, onClose, onSubmit }: Crea
     }
 
     try {
-      const result = await onSubmit({ name, email, password });
+      const result = await onSubmit({ name, email, password, bio, specialties });
       if (result) {
         setName('');
         setEmail('');
         setPassword('');
+        setBio('');
+        setSpecialties('');
         onClose();
         toast.success('Trabajador creado exitosamente');
       }
@@ -105,6 +109,31 @@ export function CreateWorkerModal({ isOpen, isLoading, onClose, onSubmit }: Crea
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
+              disabled={isLoading}
+              className="bg-gray-dark/50 border-gray-light/30 text-white placeholder-gray-500"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="worker-bio" className="text-white mb-2 block">Bio</Label>
+            <textarea
+              id="worker-bio"
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+              placeholder="Experiencia y estilo de corte"
+              disabled={isLoading}
+              className="w-full bg-gray-dark/50 border border-gray-light/30 text-white placeholder-gray-500 rounded px-3 py-2 min-h-[80px]"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="worker-specialties" className="text-white mb-2 block">Especialidades</Label>
+            <Input
+              id="worker-specialties"
+              type="text"
+              value={specialties}
+              onChange={(e) => setSpecialties(e.target.value)}
+              placeholder="Degradados, barba, diseño"
               disabled={isLoading}
               className="bg-gray-dark/50 border-gray-light/30 text-white placeholder-gray-500"
             />
