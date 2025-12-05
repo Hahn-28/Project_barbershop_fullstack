@@ -1,17 +1,22 @@
 "use client";
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { api } from "@/lib/api";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Toaster, toast } from "@/components/ui/sonner";
+import { Toaster } from "@/components/ui/sonner";
+import { Scissors, User, CalendarDays, Clock, Check } from 'lucide-react';
+import { Calendar } from './Calendar';
 
-export function BookingModule({ onBookingComplete }: { onBookingComplete?: () => void }) {
+interface BookingModuleProps {
+  readonly onBookingComplete?: () => void;
+}
+
+export function BookingModule({ onBookingComplete }: BookingModuleProps) {
   const [step, setStep] = useState(1);
   const [selectedService, setSelectedService] = useState('');
   const [selectedBarber, setSelectedBarber] = useState('');
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
 
-  type Service = { id: number; name: string; price?: number };
+  type Service = { id: number; name: string; description?: string; price?: number };
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -23,7 +28,8 @@ export function BookingModule({ onBookingComplete }: { onBookingComplete?: () =>
         setServices(s);
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : "No se pudieron cargar servicios";
-        setError(message);
+        // Error is caught, intentionally not shown in UI for this view
+        console.error(message);
       }
     })();
   }, []);
@@ -101,11 +107,13 @@ export function BookingModule({ onBookingComplete }: { onBookingComplete?: () =>
           ></div>
 
           {[
-            { num: 1, icon: '✂️', label: 'Servicio' },
-            { num: 2, icon: '👤', label: 'Barbero' },
-            { num: 3, icon: '📅', label: 'Fecha' },
-            { num: 4, icon: '⏰', label: 'Hora' },
-          ].map((s) => (
+            { num: 1, icon: Scissors, label: 'Servicio' },
+            { num: 2, icon: User, label: 'Barbero' },
+            { num: 3, icon: CalendarDays, label: 'Fecha' },
+            { num: 4, icon: Clock, label: 'Hora' },
+          ].map((s) => {
+            const IconComponent = s.icon;
+            return (
               <div key={s.num} className="flex flex-col items-center gap-2">
                 <div
                   className={`w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${
@@ -114,13 +122,14 @@ export function BookingModule({ onBookingComplete }: { onBookingComplete?: () =>
                       : 'bg-gray-medium border-gray-light/30 text-gray-400'
                   }`}
                 >
-                  <span className="w-5 h-5 text-lg">{s.icon}</span>
+                  <IconComponent className="w-5 h-5" />
                 </div>
                 <span className={`text-sm ${step >= s.num ? 'text-gold' : 'text-gray-400'}`}>
                   {s.label}
                 </span>
               </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Booking Form */}
@@ -140,13 +149,24 @@ export function BookingModule({ onBookingComplete }: { onBookingComplete?: () =>
                         : 'border-gray-light/20 bg-gray-dark hover:border-gold/50'
                     }`}
                   >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h4 className="text-white mb-1">{service.name}</h4>
-                        {service.price != null && <p className="text-gold">S/ {Number(service.price).toFixed(2)}</p>}
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1">
+                        <h4 className="text-white font-semibold mb-2">{service.name}</h4>
+                        {service.description && (
+                          <p className="text-gray-400 text-sm mb-3 line-clamp-2">{service.description}</p>
+                        )}
+                        <div className="flex items-center gap-4">
+                          {service.price != null && (
+                            <p className="text-gold font-bold text-lg">S/ {Number(service.price).toFixed(2)}</p>
+                          )}
+                          <div className="flex items-center gap-1 text-gray-400 text-sm">
+                            <Clock className="w-4 h-4" />
+                            <span>30-60 min</span>
+                          </div>
+                        </div>
                       </div>
                       {selectedService === service.name && (
-                        <span className="w-6 h-6 text-gold text-lg">✔</span>
+                        <Check className="w-6 h-6 text-gold shrink-0" />
                       )}
                     </div>
                   </button>
@@ -173,7 +193,7 @@ export function BookingModule({ onBookingComplete }: { onBookingComplete?: () =>
                     <div className="flex items-center justify-between">
                       <h4 className="text-white">{barber.name}</h4>
                       {selectedBarber === barber.name && (
-                        <span className="w-6 h-6 text-gold text-lg">✔</span>
+                        <Check className="w-6 h-6 text-gold" />
                       )}
                     </div>
                   </button>
@@ -186,13 +206,22 @@ export function BookingModule({ onBookingComplete }: { onBookingComplete?: () =>
           {step === 3 && (
             <div>
               <h3 className="text-white mb-6">Selecciona la fecha</h3>
-              <input
-                type="date"
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-                min={new Date().toISOString().split('T')[0]}
-                className="w-full p-4 rounded-lg bg-gray-dark border-2 border-gray-light/20 text-white focus:border-gold focus:outline-none transition-colors"
+              <Calendar 
+                onDateSelect={(date) => setSelectedDate(date)}
+                selectedDate={selectedDate}
               />
+              {selectedDate && (
+                <div className="mt-4 p-4 bg-gold/10 border border-gold/30 rounded-lg">
+                  <p className="text-gold text-center">
+                    Fecha seleccionada: {new Date(selectedDate).toLocaleDateString('es-ES', { 
+                      weekday: 'long', 
+                      year: 'numeric', 
+                      month: 'long', 
+                      day: 'numeric' 
+                    })}
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
