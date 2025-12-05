@@ -9,6 +9,7 @@ export type Booking = {
   status: string;
   notes?: string;
   service?: { name: string; price?: number };
+   worker?: { id: number; name: string; email?: string; phone?: string };
 };
 
 export function useBookings() {

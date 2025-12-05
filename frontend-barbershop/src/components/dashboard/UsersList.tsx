@@ -104,7 +104,7 @@ export function UsersList({ users, loading, error, onRefresh, onUpdateStatus, ro
 
           {expandedUserId === user.id && (
             <div className="mt-4 pt-4 border-t border-gray-light/20 flex gap-2">
-              {user.active ? (
+              {user.isActive ? (
                 <Button
                   onClick={() => onUpdateStatus(user.id, false)}
                   className="bg-red-600/80 hover:bg-red-700 text-white text-xs px-3 py-1"

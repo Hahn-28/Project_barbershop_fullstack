@@ -2,8 +2,10 @@
 import { useEffect, useState } from 'react';
 import { api } from "@/lib/api";
 import { Toaster } from "@/components/ui/sonner";
-import { Scissors, User, CalendarDays, Clock, Check } from 'lucide-react';
+import { Scissors, User, Clock, Check } from 'lucide-react';
 import { Calendar } from './Calendar';
+import { getUserIdFromToken } from '@/lib/auth';
+import type { EventInput } from '@fullcalendar/core';
 
 interface BookingModuleProps {
   readonly onBookingComplete?: () => void;
@@ -13,13 +15,19 @@ export function BookingModule({ onBookingComplete }: BookingModuleProps) {
   const [step, setStep] = useState(1);
   const [selectedService, setSelectedService] = useState('');
   const [selectedBarber, setSelectedBarber] = useState('');
+  const [selectedWorkerId, setSelectedWorkerId] = useState<number | null>(null);
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
+  const totalSteps = 3;
 
   type Service = { id: number; name: string; description?: string; price?: number };
   const [services, setServices] = useState<Service[]>([]);
+  type Worker = { id: number; name: string; bio?: string; specialties?: string; phone?: string; avatarUrl?: string };
+  const [workers, setWorkers] = useState<Worker[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [allBookings, setAllBookings] = useState<EventInput[]>([]);
+  const clientId = getUserIdFromToken();
 
   useEffect(() => {
     (async () => {
@@ -34,19 +42,48 @@ export function BookingModule({ onBookingComplete }: BookingModuleProps) {
     })();
   }, []);
 
-  const barbers = [
-    { id: 'carlos', name: 'Carlos Méndez' },
-    { id: 'miguel', name: 'Miguel Ángel Torres' },
-    { id: 'ricardo', name: 'Ricardo Hernández' },
-  ];
+  // Load workers for selection
+  useEffect(() => {
+    (async () => {
+      try {
+        const w = await api.listWorkers() as Worker[];
+        setWorkers(w || []);
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : "No se pudieron cargar barberos";
+        console.error(message);
+        setWorkers([]);
+      }
+    })();
+  }, []);
 
-  const availableTimes = [
-    '09:00', '10:00', '11:00', '12:00',
-    '14:00', '15:00', '16:00', '17:00', '18:00'
-  ];
+  // Cargar todas las reservas para validación
+  useEffect(() => {
+    (async () => {
+      try {
+        const bookings = await api.allBookings() as any[];
+        const events: EventInput[] = bookings.map(b => ({
+          id: String(b.id),
+          title: b.service?.name || 'Reserva',
+          start: new Date(b.date).toISOString(),
+          end: new Date(new Date(b.date).getTime() + 60 * 60 * 1000).toISOString(),
+          backgroundColor: b.status === 'CONFIRMED' ? 'rgba(34, 197, 94, 0.9)' : 
+                          b.status === 'PENDING' ? 'rgba(212, 175, 55, 0.9)' : 
+                          'rgba(239, 68, 68, 0.7)',
+          extendedProps: {
+            status: b.status,
+            workerId: b.workerId,
+            userId: b.userId,
+          }
+        }));
+        setAllBookings(events);
+      } catch (err) {
+        console.error("Error loading bookings:", err);
+      }
+    })();
+  }, []);
 
   const handleNext = () => {
-    if (step < 4) setStep(step + 1);
+    if (step < totalSteps) setStep(step + 1);
   };
 
   const handleBack = () => {
@@ -59,18 +96,42 @@ export function BookingModule({ onBookingComplete }: BookingModuleProps) {
     try {
       const svc = services.find((s) => s.name === selectedService);
       if (!svc) throw new Error("Servicio inválido");
+      if (!selectedWorkerId) throw new Error("Selecciona un barbero");
+      if (!selectedDate || !selectedTime) throw new Error("Selecciona fecha y hora en el calendario");
+      
+      console.log("Creating booking:", { 
+        serviceId: svc.id, 
+        workerId: selectedWorkerId,
+        date: selectedDate, 
+        time: selectedTime,
+        selectedBarber 
+      });
+      
       const dateIso = `${selectedDate}T${selectedTime}:00`;
-      await api.createBooking({ serviceId: svc.id, date: dateIso, time: selectedTime, notes: selectedBarber });
-      alert("Reserva creada correctamente");
+      const result = await api.createBooking({ 
+        serviceId: svc.id, 
+        workerId: selectedWorkerId,
+        date: dateIso, 
+        time: selectedTime, 
+        notes: selectedBarber 
+      });
+      
+      console.log("Booking created successfully:", result);
+      alert("¡Reserva creada correctamente!");
       onBookingComplete?.();
+      
+      // Reset form
       setStep(1);
       setSelectedService('');
       setSelectedBarber('');
+      setSelectedWorkerId(null);
       setSelectedDate('');
       setSelectedTime('');
     } catch (err: unknown) {
+      console.error("Error creating booking:", err);
       const message = err instanceof Error ? err.message : "No se pudo crear la reserva";
       setError(message);
+      alert(`Error: ${message}`);
     } finally {
       setLoading(false);
     }
@@ -78,9 +139,8 @@ export function BookingModule({ onBookingComplete }: BookingModuleProps) {
 
   const canProceed = () => {
     if (step === 1) return selectedService !== '';
-    if (step === 2) return selectedBarber !== '';
-    if (step === 3) return selectedDate !== '';
-    if (step === 4) return selectedTime !== '';
+    if (step === 2) return selectedWorkerId != null;
+    if (step === 3) return selectedDate !== '' && selectedTime !== '';
     return false;
   };
 
@@ -103,14 +163,13 @@ export function BookingModule({ onBookingComplete }: BookingModuleProps) {
           <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-gray-light/20 -translate-y-1/2 -z-10"></div>
           <div 
             className="absolute top-1/2 left-0 h-0.5 bg-gold -translate-y-1/2 -z-10 transition-all duration-500"
-            style={{ width: `${((step - 1) / 3) * 100}%` }}
+            style={{ width: `${((step - 1) / (totalSteps - 1)) * 100}%` }}
           ></div>
 
           {[
             { num: 1, icon: Scissors, label: 'Servicio' },
             { num: 2, icon: User, label: 'Barbero' },
-            { num: 3, icon: CalendarDays, label: 'Fecha' },
-            { num: 4, icon: Clock, label: 'Hora' },
+            { num: 3, icon: Clock, label: 'Fecha y hora' },
           ].map((s) => {
             const IconComponent = s.icon;
             return (
@@ -179,45 +238,66 @@ export function BookingModule({ onBookingComplete }: BookingModuleProps) {
           {step === 2 && (
             <div>
               <h3 className="text-white mb-6">Elige tu barbero</h3>
-              <div className="grid grid-cols-1 gap-4">
-                {barbers.map((barber) => (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {workers.map((barber) => (
                   <button
                     key={barber.id}
-                    onClick={() => setSelectedBarber(barber.name)}
+                    onClick={() => { setSelectedBarber(barber.name); setSelectedWorkerId(barber.id); }}
                     className={`p-6 rounded-lg border-2 text-left transition-all duration-300 ${
-                      selectedBarber === barber.name
+                      selectedWorkerId === barber.id
                         ? 'border-gold bg-gold/10'
                         : 'border-gray-light/20 bg-gray-dark hover:border-gold/50'
                     }`}
                   >
-                    <div className="flex items-center justify-between">
-                      <h4 className="text-white">{barber.name}</h4>
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="text-white font-semibold">{barber.name}</h4>
                       {selectedBarber === barber.name && (
                         <Check className="w-6 h-6 text-gold" />
                       )}
                     </div>
+                    {barber.specialties && (
+                      <p className="text-gold text-sm mb-1">{barber.specialties}</p>
+                    )}
+                    {barber.bio && (
+                      <p className="text-gray-400 text-sm line-clamp-2 mb-2">{barber.bio}</p>
+                    )}
+                    {barber.phone && (
+                      <p className="text-gray-500 text-xs">Tel: {barber.phone}</p>
+                    )}
                   </button>
                 ))}
+                {workers.length === 0 && (
+                  <p className="text-gray-400">No hay barberos disponibles.</p>
+                )}
               </div>
             </div>
           )}
 
-          {/* Step 3: Select Date */}
+          {/* Step 3: Select Date & Time via calendar */}
           {step === 3 && (
             <div>
-              <h3 className="text-white mb-6">Selecciona la fecha</h3>
+              <h3 className="text-white mb-6">Selecciona fecha y hora</h3>
               <Calendar 
-                onDateSelect={(date) => setSelectedDate(date)}
+                onSlotSelect={(date, time) => {
+                  setSelectedDate(date);
+                  setSelectedTime(time);
+                }}
                 selectedDate={selectedDate}
+                selectedTime={selectedTime}
+                bookings={allBookings}
+                workerId={selectedWorkerId || undefined}
+                clientId={clientId || undefined}
               />
-              {selectedDate && (
-                <div className="mt-4 p-4 bg-gold/10 border border-gold/30 rounded-lg">
-                  <p className="text-gold text-center">
-                    Fecha seleccionada: {new Date(selectedDate).toLocaleDateString('es-ES', { 
-                      weekday: 'long', 
-                      year: 'numeric', 
-                      month: 'long', 
-                      day: 'numeric' 
+              {selectedDate && selectedTime && (
+                <div className="mt-4 p-4 bg-gold/10 border border-gold/30 rounded-lg text-center">
+                  <p className="text-gold">
+                    Reserva seleccionada: {new Date(`${selectedDate}T${selectedTime}:00`).toLocaleString('es-ES', {
+                      weekday: 'long',
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
                     })}
                   </p>
                 </div>
@@ -225,25 +305,11 @@ export function BookingModule({ onBookingComplete }: BookingModuleProps) {
             </div>
           )}
 
-          {/* Step 4: Select Time */}
-          {step === 4 && (
-            <div>
-              <h3 className="text-white mb-6">Elige la hora</h3>
-              <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
-                {availableTimes.map((time) => (
-                  <button
-                    key={time}
-                    onClick={() => setSelectedTime(time)}
-                    className={`p-4 rounded-lg border-2 transition-all duration-300 ${
-                      selectedTime === time
-                        ? 'border-gold bg-gold/10 text-gold'
-                        : 'border-gray-light/20 bg-gray-dark text-white hover:border-gold/50'
-                    }`}
-                  >
-                    {time}
-                  </button>
-                ))}
-              </div>
+          {/* Error Message */}
+          {error && (
+            <div className="mt-4 p-4 bg-red-500/10 border border-red-500/40 rounded-lg flex items-center gap-2">
+              <span className="text-red-500 text-xl">⚠️</span>
+              <p className="text-red-300">{error}</p>
             </div>
           )}
 
@@ -261,7 +327,7 @@ export function BookingModule({ onBookingComplete }: BookingModuleProps) {
               ← Atrás
             </button>
 
-            {step < 4 ? (
+            {step < totalSteps ? (
               <button
                 onClick={handleNext}
                 disabled={!canProceed()}

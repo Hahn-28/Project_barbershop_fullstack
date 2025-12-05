@@ -39,7 +39,7 @@ export const register = async (req, res) => {
 
     // Issue JWT like in login for immediate session after registration
     const token = jwt.sign(
-      { id: newUser.id, email: newUser.email, role: newUser.role },
+      { id: newUser.id, email: newUser.email, role: newUser.role, name: newUser.name },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
@@ -70,7 +70,7 @@ export const login = async (req, res) => {
     }
 
     const token = jwt.sign(
-      { id: user.id, email: user.email, role: user.role },
+      { id: user.id, email: user.email, role: user.role, name: user.name },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );

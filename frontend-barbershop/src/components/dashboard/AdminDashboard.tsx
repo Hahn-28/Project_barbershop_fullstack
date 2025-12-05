@@ -40,12 +40,14 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
     return result;
   };
 
-  const handleCreateWorker = async (data: { name: string; email: string; password: string }) => {
+  const handleCreateWorker = async (data: { name: string; email: string; password: string; bio?: string; specialties?: string }) => {
     const workerData: NewUser = {
       name: data.name,
       email: data.email,
       password: data.password,
       role: 'WORKER',
+      bio: data.bio,
+      specialties: data.specialties,
     };
     return await handleCreateUser(workerData);
   };

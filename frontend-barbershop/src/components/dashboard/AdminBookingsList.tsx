@@ -65,9 +65,15 @@ export function AdminBookingsList({
           {filteredBookings.map((b) => (
             <Card key={b.id} className="p-6 bg-gray-dark border border-gray-light/20">
               <div className="flex items-start justify-between">
-                <div>
+                <div className="space-y-1">
                   <h4 className="text-white mb-1">{b.service?.name || `Servicio #${b.serviceId}`}</h4>
                   <p className="text-gray-400">{new Date(b.date).toLocaleString()}</p>
+                  {b.user && (
+                    <p className="text-sm text-gray-300">Cliente: <span className="text-white font-semibold">{b.user.name}</span> <span className="text-gray-400 text-xs">{b.user.email}</span></p>
+                  )}
+                  {b.worker && (
+                    <p className="text-sm text-gray-300">Barbero: <span className="text-gold">{b.worker.name}</span></p>
+                  )}
                 </div>
                 <div className="text-right">
                   {b.service?.price != null && (

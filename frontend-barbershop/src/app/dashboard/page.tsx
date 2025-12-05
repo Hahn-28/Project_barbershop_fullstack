@@ -6,6 +6,7 @@ import { getRoleFromToken } from "@/lib/auth";
 import { useRouter } from "next/navigation";
 import { AdminDashboard } from "@/components/dashboard/AdminDashboard";
 import { ClientDashboard } from "@/components/dashboard/ClientDashboard";
+import { WorkerDashboard } from "@/components/dashboard/WorkerDashboard";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -27,6 +28,14 @@ export default function DashboardPage() {
     return (
       <ProtectedRoute>
         <AdminDashboard onLogout={handleLogout} />
+      </ProtectedRoute>
+    );
+  }
+
+  if (role === "WORKER") {
+    return (
+      <ProtectedRoute>
+        <WorkerDashboard onLogout={handleLogout} />
       </ProtectedRoute>
     );
   }

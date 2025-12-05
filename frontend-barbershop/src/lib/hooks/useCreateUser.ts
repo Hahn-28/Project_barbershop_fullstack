@@ -7,6 +7,10 @@ export type NewUser = {
   email: string;
   password: string;
   role: "ADMIN" | "WORKER" | "CLIENT";
+  phone?: string;
+  avatarUrl?: string;
+  bio?: string;
+  specialties?: string;
 };
 
 export function useCreateUser() {

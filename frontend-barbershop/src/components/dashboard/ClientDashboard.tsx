@@ -1,10 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { getRoleFromToken, getNameFromToken } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { BookingModule } from "@/components/BookingModule";
 import { BookingsList } from "./BookingsList";
 import { useBookings } from "@/lib/hooks/useBookings";
 import { Toaster } from "@/components/ui/sonner";
+import { PersonalCalendar } from "@/components/PersonalCalendar";
+import type { EventInput } from "@fullcalendar/core";
 
 interface ClientDashboardProps {
   readonly onLogout: () => void;
@@ -22,6 +24,20 @@ export function ClientDashboard({ onLogout }: ClientDashboardProps) {
   // Obtener nombre y rol del usuario
   const userName = getNameFromToken();
   const userRole = getRoleFromToken();
+
+  // Convertir reservas a eventos de calendario
+  const calendarEvents: EventInput[] = useMemo(() => {
+    return bookings.map(b => ({
+      id: String(b.id),
+      title: b.service?.name || 'Reserva',
+      start: new Date(b.date).toISOString(),
+      end: new Date(new Date(b.date).getTime() + 60 * 60 * 1000).toISOString(),
+      extendedProps: {
+        status: b.status,
+        workerName: b.worker?.name,
+      }
+    }));
+  }, [bookings]);
 
   return (
     <>
@@ -63,46 +79,59 @@ export function ClientDashboard({ onLogout }: ClientDashboardProps) {
           </button>
         </div>
 
-        {activeView === "bookings" && (
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-white text-xl">Mis Reservas</h2>
-              <div className="flex items-center gap-3">
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="bg-gray-dark border border-gray-light/30 text-white px-3 py-2 rounded"
-                >
-                  <option value="ALL">Todos</option>
-                  <option value="PENDING">Pendiente</option>
-                  <option value="CONFIRMED">Confirmada</option>
-                  <option value="CANCELLED">Cancelada</option>
-                </select>
-                <Button onClick={loadBookings} className="bg-gold text-dark hover:bg-gold/90">
-                  Actualizar
-                </Button>
+        {activeView === "bookings" ? (
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+            {/* Columna izquierda: Contenido principal (tarjetas) */}
+            <div className="lg:col-span-1 order-2 lg:order-1">
+              <div>
+                <div className="flex flex-col gap-3 mb-4">
+                  <h2 className="text-white text-lg font-semibold">Mis Reservas</h2>
+                  <div className="flex flex-col gap-2">
+                    <select
+                      value={statusFilter}
+                      onChange={(e) => setStatusFilter(e.target.value)}
+                      className="bg-gray-dark border border-gray-light/30 text-white px-3 py-2 rounded text-sm"
+                    >
+                      <option value="ALL">Todos</option>
+                      <option value="PENDING">Pendiente</option>
+                      <option value="CONFIRMED">Confirmada</option>
+                      <option value="CANCELLED">Cancelada</option>
+                    </select>
+                    <Button onClick={loadBookings} className="bg-gold text-dark hover:bg-gold/90 w-full">
+                      Actualizar
+                    </Button>
+                  </div>
+                </div>
+
+                <BookingsList
+                  bookings={bookings}
+                  loading={loading}
+                  error={error}
+                  statusFilter={statusFilter}
+                  onRefresh={loadBookings}
+                  onCancel={cancelBooking}
+                  onNewBooking={() => setActiveView("new")}
+                />
               </div>
             </div>
 
-            <BookingsList
-              bookings={bookings}
-              loading={loading}
-              error={error}
-              statusFilter={statusFilter}
-              onRefresh={loadBookings}
-              onCancel={cancelBooking}
-              onNewBooking={() => setActiveView("new")}
+            {/* Columna derecha: Calendario personal */}
+            <div className="lg:col-span-4 order-1 lg:order-2">
+              <PersonalCalendar 
+                bookings={calendarEvents} 
+                title="Mis Citas"
+              />
+            </div>
+          </div>
+        ) : (
+          <div>
+            <BookingModule
+              onBookingComplete={() => {
+                setActiveView("bookings");
+                loadBookings();
+              }}
             />
           </div>
-        )}
-
-        {activeView === "new" && (
-          <BookingModule
-            onBookingComplete={() => {
-              setActiveView("bookings");
-              loadBookings();
-            }}
-          />
         )}
       </div>
     </>
