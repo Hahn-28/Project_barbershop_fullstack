@@ -4,6 +4,7 @@ import { api } from "@/lib/api";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Toaster, toast } from "@/components/ui/sonner";
 import { Scissors, User, CalendarDays, Clock, Check } from 'lucide-react';
+import { Calendar } from './Calendar';
 
 export function BookingModule({ onBookingComplete }: { onBookingComplete?: () => void }) {
   const [step, setStep] = useState(1);
@@ -190,13 +191,22 @@ export function BookingModule({ onBookingComplete }: { onBookingComplete?: () =>
           {step === 3 && (
             <div>
               <h3 className="text-white mb-6">Selecciona la fecha</h3>
-              <input
-                type="date"
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-                min={new Date().toISOString().split('T')[0]}
-                className="w-full p-4 rounded-lg bg-gray-dark border-2 border-gray-light/20 text-white focus:border-gold focus:outline-none transition-colors"
+              <Calendar 
+                onDateSelect={(date) => setSelectedDate(date)}
+                selectedDate={selectedDate}
               />
+              {selectedDate && (
+                <div className="mt-4 p-4 bg-gold/10 border border-gold/30 rounded-lg">
+                  <p className="text-gold text-center">
+                    Fecha seleccionada: {new Date(selectedDate).toLocaleDateString('es-ES', { 
+                      weekday: 'long', 
+                      year: 'numeric', 
+                      month: 'long', 
+                      day: 'numeric' 
+                    })}
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
