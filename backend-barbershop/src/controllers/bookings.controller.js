@@ -3,7 +3,7 @@ import { errorResponse, successResponse } from "../utils/response.js";
 
 export const createBooking = async (req, res) => {
   try {
-    const { serviceId, date, time } = req.body;
+    const { serviceId, date, time, notes } = req.body;
     const userId = req.user.id;
 
     // Validate service exists
@@ -20,6 +20,7 @@ export const createBooking = async (req, res) => {
         serviceId: parseInt(serviceId),
         date: new Date(date),
         time,
+        notes,
         status: "PENDING",
       },
     });

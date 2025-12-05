@@ -1,4 +1,4 @@
-const API_BASE = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000").replace(/\/$/, "");
+const API_BASE = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000").replace(/\/$/, "");
 
 function getToken(): string | null {
   if (typeof window === "undefined") return null;
@@ -11,6 +11,21 @@ function getToken(): string | null {
 
 type JsonValue = unknown;
 type ApiEnvelope<T = JsonValue> = { success?: boolean; message?: string; data?: T } | T;
+
+function extractMessage(raw: unknown): string | undefined {
+  if (raw && typeof raw === "object" && "message" in raw) {
+    const value = (raw as { message?: unknown }).message;
+    return typeof value === "string" ? value : undefined;
+  }
+  return undefined;
+}
+
+function unwrapEnvelope<T>(body: ApiEnvelope<T>): T {
+  if (body && typeof body === "object" && "data" in (body as Record<string, unknown>)) {
+    return (body as { data: T }).data;
+  }
+  return body as T;
+}
 
 async function request<T = JsonValue>(path: string, options: RequestInit = {}): Promise<T> {
   const token = getToken();
@@ -31,15 +46,12 @@ async function request<T = JsonValue>(path: string, options: RequestInit = {}): 
   const raw = isJson ? await res.json() : await res.text();
 
   if (!res.ok) {
-    const message = isJson ? (raw as any)?.message || JSON.stringify(raw) : String(raw);
+    const message = isJson ? extractMessage(raw) || JSON.stringify(raw) : String(raw);
     throw new Error(message || `HTTP ${res.status}`);
   }
 
   const body = raw as ApiEnvelope<T>;
-  if (body && typeof body === "object" && "data" in (body as any)) {
-    return (body as any).data as T;
-  }
-  return body as T;
+  return unwrapEnvelope(body);
 }
 
 const http = {
