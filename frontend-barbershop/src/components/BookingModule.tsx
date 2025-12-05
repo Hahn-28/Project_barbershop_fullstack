@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { api } from "@/lib/api";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Toaster, toast } from "@/components/ui/sonner";
+import { Scissors, User, CalendarDays, Clock, Check } from 'lucide-react';
 
 export function BookingModule({ onBookingComplete }: { onBookingComplete?: () => void }) {
   const [step, setStep] = useState(1);
@@ -101,11 +102,13 @@ export function BookingModule({ onBookingComplete }: { onBookingComplete?: () =>
           ></div>
 
           {[
-            { num: 1, icon: '✂️', label: 'Servicio' },
-            { num: 2, icon: '👤', label: 'Barbero' },
-            { num: 3, icon: '📅', label: 'Fecha' },
-            { num: 4, icon: '⏰', label: 'Hora' },
-          ].map((s) => (
+            { num: 1, icon: Scissors, label: 'Servicio' },
+            { num: 2, icon: User, label: 'Barbero' },
+            { num: 3, icon: CalendarDays, label: 'Fecha' },
+            { num: 4, icon: Clock, label: 'Hora' },
+          ].map((s) => {
+            const IconComponent = s.icon;
+            return (
               <div key={s.num} className="flex flex-col items-center gap-2">
                 <div
                   className={`w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${
@@ -114,13 +117,14 @@ export function BookingModule({ onBookingComplete }: { onBookingComplete?: () =>
                       : 'bg-gray-medium border-gray-light/30 text-gray-400'
                   }`}
                 >
-                  <span className="w-5 h-5 text-lg">{s.icon}</span>
+                  <IconComponent className="w-5 h-5" />
                 </div>
                 <span className={`text-sm ${step >= s.num ? 'text-gold' : 'text-gray-400'}`}>
                   {s.label}
                 </span>
               </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Booking Form */}
@@ -146,7 +150,7 @@ export function BookingModule({ onBookingComplete }: { onBookingComplete?: () =>
                         {service.price != null && <p className="text-gold">S/ {Number(service.price).toFixed(2)}</p>}
                       </div>
                       {selectedService === service.name && (
-                        <span className="w-6 h-6 text-gold text-lg">✔</span>
+                        <Check className="w-6 h-6 text-gold" />
                       )}
                     </div>
                   </button>
@@ -173,7 +177,7 @@ export function BookingModule({ onBookingComplete }: { onBookingComplete?: () =>
                     <div className="flex items-center justify-between">
                       <h4 className="text-white">{barber.name}</h4>
                       {selectedBarber === barber.name && (
-                        <span className="w-6 h-6 text-gold text-lg">✔</span>
+                        <Check className="w-6 h-6 text-gold" />
                       )}
                     </div>
                   </button>

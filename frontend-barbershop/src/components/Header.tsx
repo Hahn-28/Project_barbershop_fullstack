@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useAuthToken } from "@/lib/useAuthToken";
+import { Scissors } from "lucide-react";
 export function Header() {
   // Subscribe to auth token changes without setState in effects
   const hasSession = useAuthToken();
@@ -23,7 +24,7 @@ export function Header() {
             onClick={() => scrollToSection('inicio')}
           >
             <div className="bg-gold p-2 rounded">
-              <span className="w-6 h-6 text-dark text-lg">✂️</span>
+              <Scissors className="w-6 h-6 text-dark" />
             </div>
             <div>
               <h3 className="text-white">ÉLITE</h3>

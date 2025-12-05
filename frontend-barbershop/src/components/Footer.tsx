@@ -1,3 +1,5 @@
+import { Scissors, Facebook, Instagram, Twitter, Clock, MapPin, Phone, Mail } from "lucide-react";
+
 export function Footer() {
   return (
     <footer id="contacto" className="bg-gray-dark border-t border-gray-light/20">
@@ -7,7 +9,7 @@ export function Footer() {
           <div>
             <div className="flex items-center gap-3 mb-4">
               <div className="bg-gold p-2 rounded">
-                <span className="w-6 h-6 text-dark text-lg">✂️</span>
+                <Scissors className="w-6 h-6 text-dark" />
               </div>
               <div>
                 <h3 className="text-white">ÉLITE</h3>
@@ -22,19 +24,19 @@ export function Footer() {
                 href="#"
                 className="w-10 h-10 rounded-full border border-gray-light/20 flex items-center justify-center hover:border-gold hover:bg-gold/10 transition-all duration-300"
               >
-                <span className="w-5 h-5 text-gold text-lg">f</span>
+                <Facebook className="w-5 h-5 text-gold" />
               </a>
               <a
                 href="#"
                 className="w-10 h-10 rounded-full border border-gray-light/20 flex items-center justify-center hover:border-gold hover:bg-gold/10 transition-all duration-300"
               >
-                <span className="w-5 h-5 text-gold text-lg">◎</span>
+                <Instagram className="w-5 h-5 text-gold" />
               </a>
               <a
                 href="#"
                 className="w-10 h-10 rounded-full border border-gray-light/20 flex items-center justify-center hover:border-gold hover:bg-gold/10 transition-all duration-300"
               >
-                <span className="w-5 h-5 text-gold text-lg">𝕏</span>
+                <Twitter className="w-5 h-5 text-gold" />
               </a>
             </div>
           </div>
@@ -44,21 +46,21 @@ export function Footer() {
             <h4 className="text-white mb-6">Horarios de Atención</h4>
             <div className="space-y-3 text-gray-400">
               <div className="flex items-start gap-3">
-                <span className="w-5 h-5 text-gold mt-0.5 flex-shrink-0">⏰</span>
+                <Clock className="w-5 h-5 text-gold mt-0.5 flex-shrink-0" />
                 <div>
                   <p>Lunes - Viernes</p>
                   <p className="text-white">9:00 AM - 8:00 PM</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
-                <span className="w-5 h-5 text-gold mt-0.5 flex-shrink-0">⏰</span>
+                <Clock className="w-5 h-5 text-gold mt-0.5 flex-shrink-0" />
                 <div>
                   <p>Sábados</p>
                   <p className="text-white">9:00 AM - 6:00 PM</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
-                <span className="w-5 h-5 text-gold mt-0.5 flex-shrink-0">⏰</span>
+                <Clock className="w-5 h-5 text-gold mt-0.5 flex-shrink-0" />
                 <div>
                   <p>Domingos</p>
                   <p className="text-white">Cerrado</p>
@@ -72,17 +74,17 @@ export function Footer() {
             <h4 className="text-white mb-6">Contacto</h4>
             <div className="space-y-4 text-gray-400">
               <div className="flex items-start gap-3">
-                <span className="w-5 h-5 text-gold mt-0.5 flex-shrink-0">📍</span>
+                <MapPin className="w-5 h-5 text-gold mt-0.5 flex-shrink-0" />
                 <p>Av. Principal 123<br />Centro, Ciudad</p>
               </div>
               <div className="flex items-center gap-3">
-                <span className="w-5 h-5 text-gold flex-shrink-0">📞</span>
+                <Phone className="w-5 h-5 text-gold flex-shrink-0" />
                 <a href="tel:+525512345678" className="hover:text-gold transition-colors">
                   +52 55 1234 5678
                 </a>
               </div>
               <div className="flex items-center gap-3">
-                <span className="w-5 h-5 text-gold flex-shrink-0">✉️</span>
+                <Mail className="w-5 h-5 text-gold flex-shrink-0" />
                 <a href="mailto:info@elitebarber.com" className="hover:text-gold transition-colors">
                   info@elitebarber.com
                 </a>

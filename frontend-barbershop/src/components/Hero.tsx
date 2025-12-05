@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import { CalendarDays } from 'lucide-react';
 
 export function Hero() {
   const scrollToBooking = () => {
@@ -42,7 +43,7 @@ export function Hero() {
             onClick={scrollToBooking}
             className="bg-gold text-dark px-8 py-4 rounded-lg inline-flex items-center gap-3 hover:bg-gold/90 transition-all duration-300 shadow-2xl hover:shadow-gold/50 group"
           >
-            <span className="w-5 h-5 text-lg">📅</span>
+            <CalendarDays className="w-5 h-5" />
             <span>Agendar cita</span>
           </button>
         </div>
