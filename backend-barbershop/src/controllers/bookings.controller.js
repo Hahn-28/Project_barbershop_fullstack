@@ -33,12 +33,20 @@ export const createBooking = async (req, res) => {
       return errorResponse(res, "Worker not found or inactive", 404);
     }
 
+    // La fecha viene en formato ISO UTC desde el frontend
+    const bookingDate = new Date(date);
+    console.log("Saving booking with date:", { 
+      received: date, 
+      parsed: bookingDate.toISOString(),
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone 
+    });
+    
     const newBooking = await prisma.booking.create({
       data: {
         userId,
         workerId: parseInt(workerId),
         serviceId: parseInt(serviceId),
-        date: new Date(date),
+        date: bookingDate,
         time,
         notes: notes || worker.name,
         status: "PENDING",

@@ -24,9 +24,18 @@ export function BookingModule({ onBookingComplete }: BookingModuleProps) {
   const [services, setServices] = useState<Service[]>([]);
   type Worker = { id: number; name: string; bio?: string; specialties?: string; phone?: string; avatarUrl?: string };
   const [workers, setWorkers] = useState<Worker[]>([]);
+  type Booking = { 
+    id: number; 
+    date: string; 
+    status: string; 
+    workerId: number; 
+    userId: number; 
+    service?: { name: string }; 
+  };
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [allBookings, setAllBookings] = useState<EventInput[]>([]);
+  const [myBookings, setMyBookings] = useState<EventInput[]>([]);
+  const [workerBookingsMap, setWorkerBookingsMap] = useState<Map<number, EventInput[]>>(new Map());
   const clientId = getUserIdFromToken();
 
   useEffect(() => {
@@ -56,31 +65,102 @@ export function BookingModule({ onBookingComplete }: BookingModuleProps) {
     })();
   }, []);
 
-  // Cargar todas las reservas para validación
+  // Cargar las reservas del cliente actual
   useEffect(() => {
     (async () => {
       try {
-        const bookings = await api.allBookings() as any[];
-        const events: EventInput[] = bookings.map(b => ({
-          id: String(b.id),
-          title: b.service?.name || 'Reserva',
-          start: new Date(b.date).toISOString(),
-          end: new Date(new Date(b.date).getTime() + 60 * 60 * 1000).toISOString(),
-          backgroundColor: b.status === 'CONFIRMED' ? 'rgba(34, 197, 94, 0.9)' : 
-                          b.status === 'PENDING' ? 'rgba(212, 175, 55, 0.9)' : 
-                          'rgba(239, 68, 68, 0.7)',
-          extendedProps: {
-            status: b.status,
-            workerId: b.workerId,
-            userId: b.userId,
-          }
-        }));
-        setAllBookings(events);
+        const bookings = await api.myBookings() as Booking[];
+        console.log("📅 Reservas cargadas del cliente:", bookings);
+        
+        const events: EventInput[] = bookings
+          .filter(b => b.status !== 'CANCELLED') // Filtrar canceladas
+          .map(b => {
+            // Usar la fecha tal como viene del backend
+            const bookingDate = typeof b.date === 'string' ? b.date : b.date.toISOString();
+            const startDate = new Date(bookingDate);
+            const endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
+            
+            console.log(`Reserva #${b.id}: date=${b.date}, using=${bookingDate}`);
+            
+            return {
+              id: String(b.id),
+              title: b.service?.name || 'Mi Reserva',
+              start: bookingDate,
+              end: endDate.toISOString(),
+              allDay: false,
+              backgroundColor: b.status === 'CONFIRMED' ? 'rgba(34, 197, 94, 0.8)' : 'rgba(212, 175, 55, 0.8)',
+              borderColor: b.status === 'CONFIRMED' ? 'rgb(34, 197, 94)' : '#D4AF37',
+              extendedProps: {
+                status: b.status,
+                workerId: b.workerId,
+                userId: b.userId,
+                isMyBooking: true,
+              }
+            };
+          });
+        
+        console.log("📅 Eventos del calendario generados:", events);
+        setMyBookings(events);
       } catch (err) {
-        console.error("Error loading bookings:", err);
+        console.error("Error loading my bookings:", err);
       }
     })();
   }, []);
+
+  // Cargar reservas cuando se selecciona un trabajador
+  useEffect(() => {
+    if (!selectedWorkerId) return;
+    
+    // Si ya tenemos las reservas de este trabajador, no recargar
+    if (workerBookingsMap.has(selectedWorkerId)) return;
+
+    (async () => {
+      try {
+        // Crear un mock de reservas del trabajador basado en las existentes
+        // En producción, necesitarías un endpoint como /bookings/worker/:id
+        const bookings = await api.myBookings() as Booking[];
+        
+        // Filtrar solo las reservas de este trabajador
+        const workerEvents: EventInput[] = bookings
+          .filter(b => b.workerId === selectedWorkerId && b.status !== 'CANCELLED')
+          .map(b => {
+            // Usar la fecha tal como viene del backend
+            const bookingDate = typeof b.date === 'string' ? b.date : b.date.toISOString();
+            const startDate = new Date(bookingDate);
+            const endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
+            
+            return {
+              id: String(b.id) + '-worker',
+              title: 'Ocupado',
+              start: bookingDate,
+              end: endDate.toISOString(),
+              allDay: false,
+              backgroundColor: 'rgba(107, 114, 128, 0.7)',
+              borderColor: 'rgb(107, 114, 128)',
+              extendedProps: {
+                status: 'OCCUPIED',
+                workerId: b.workerId,
+                isWorkerBooking: true,
+              }
+            };
+          });
+        
+        const newMap = new Map(workerBookingsMap);
+        newMap.set(selectedWorkerId, workerEvents);
+        setWorkerBookingsMap(newMap);
+      } catch (err) {
+        console.error("Error loading worker bookings:", err);
+      }
+    })();
+  }, [selectedWorkerId, workerBookingsMap]);
+
+  // Combinar reservas del cliente y del trabajador seleccionado
+  const relevantBookings = [
+    ...myBookings,
+    ...(selectedWorkerId && workerBookingsMap.has(selectedWorkerId) 
+      ? workerBookingsMap.get(selectedWorkerId)! 
+      : [])
+  ];
 
   const handleNext = () => {
     if (step < totalSteps) setStep(step + 1);
@@ -99,19 +179,31 @@ export function BookingModule({ onBookingComplete }: BookingModuleProps) {
       if (!selectedWorkerId) throw new Error("Selecciona un barbero");
       if (!selectedDate || !selectedTime) throw new Error("Selecciona fecha y hora en el calendario");
       
+      // Crear fecha en hora local de Perú correctamente
+      const [year, month, day] = selectedDate.split('-').map(Number);
+      const [hours, minutes] = selectedTime.split(':').map(Number);
+      
+      // Crear fecha local (no UTC)
+      const localDate = new Date(year, month - 1, day, hours, minutes, 0, 0);
+      
+      // Convertir a UTC para enviar al backend
+      const dateTimeISO = localDate.toISOString();
+      
       console.log("Creating booking:", { 
         serviceId: svc.id, 
         workerId: selectedWorkerId,
-        date: selectedDate, 
-        time: selectedTime,
+        selectedDate,
+        selectedTime,
+        year, month, day, hours, minutes,
+        localDate: localDate.toString(),
+        dateTimeISO,
         selectedBarber 
       });
       
-      const dateIso = `${selectedDate}T${selectedTime}:00`;
       const result = await api.createBooking({ 
         serviceId: svc.id, 
         workerId: selectedWorkerId,
-        date: dateIso, 
+        date: dateTimeISO, 
         time: selectedTime, 
         notes: selectedBarber 
       });
@@ -277,6 +369,16 @@ export function BookingModule({ onBookingComplete }: BookingModuleProps) {
           {step === 3 && (
             <div>
               <h3 className="text-white mb-6">Selecciona fecha y hora</h3>
+              {selectedWorkerId && (
+                <div className="mb-4 p-3 bg-gold/10 border border-gold/30 rounded-lg">
+                  <p className="text-gold text-sm">
+                    📅 Mostrando disponibilidad de <span className="font-semibold">{selectedBarber}</span>
+                  </p>
+                  <p className="text-gray-300 text-xs mt-1">
+                    Los horarios ocupados incluyen tus citas y las del barbero seleccionado
+                  </p>
+                </div>
+              )}
               <Calendar 
                 onSlotSelect={(date, time) => {
                   setSelectedDate(date);
@@ -284,7 +386,7 @@ export function BookingModule({ onBookingComplete }: BookingModuleProps) {
                 }}
                 selectedDate={selectedDate}
                 selectedTime={selectedTime}
-                bookings={allBookings}
+                bookings={relevantBookings}
                 workerId={selectedWorkerId || undefined}
                 clientId={clientId || undefined}
               />

@@ -23,6 +23,7 @@ export function PersonalCalendar({ bookings, title = "Mi Calendario" }: Personal
           ref={calendarRef}
           plugins={[timeGridPlugin, dayGridPlugin]}
           initialView="timeGridWeek"
+          timeZone="local"
           headerToolbar={{
             left: 'prev,next today',
             center: 'title',
@@ -38,6 +39,9 @@ export function PersonalCalendar({ bookings, title = "Mi Calendario" }: Personal
           dayMaxEvents={true}
           nowIndicator={true}
           events={bookings}
+          eventDisplay="block"
+          displayEventTime={true}
+          displayEventEnd={false}
           eventClassNames={(arg) => {
             const status = arg.event.extendedProps?.status;
             if (status === 'CONFIRMED') return ['event-confirmed'];

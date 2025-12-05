@@ -27,16 +27,24 @@ export function WorkerDashboard({ onLogout }: WorkerDashboardProps) {
 
   // Convertir reservas a eventos de calendario
   const calendarEvents: EventInput[] = useMemo(() => {
-    return bookings.map(b => ({
-      id: String(b.id),
-      title: b.service?.name || 'Reserva',
-      start: new Date(b.date).toISOString(),
-      end: new Date(new Date(b.date).getTime() + 60 * 60 * 1000).toISOString(),
-      extendedProps: {
-        status: b.status,
-        clientName: b.user?.name,
-      }
-    }));
+    return bookings.map(b => {
+      // Usar la fecha tal como viene del backend
+      const bookingDate = typeof b.date === 'string' ? b.date : b.date.toISOString();
+      const startDate = new Date(bookingDate);
+      const endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
+      
+      return {
+        id: String(b.id),
+        title: b.service?.name || 'Reserva',
+        start: bookingDate,
+        end: endDate.toISOString(),
+        allDay: false, // Importante: especificar que NO es evento de todo el día
+        extendedProps: {
+          status: b.status,
+          clientName: b.user?.name,
+        }
+      };
+    });
   }, [bookings]);
 
   return (

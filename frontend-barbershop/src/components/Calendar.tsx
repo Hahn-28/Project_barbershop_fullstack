@@ -82,24 +82,33 @@ export function Calendar({ onSlotSelect, selectedDate, selectedTime, bookings = 
   );
 
   const handleSelect = (selection: DateSelectArg) => {
-    const datePart = selection.startStr.split("T")[0];
-    const timePart = selection.start.toTimeString().slice(0, 5);
+    // Extraer fecha y hora del objeto Date local sin conversión de zona horaria
+    const year = selection.start.getFullYear();
+    const month = String(selection.start.getMonth() + 1).padStart(2, '0');
+    const day = String(selection.start.getDate()).padStart(2, '0');
+    const hours = String(selection.start.getHours()).padStart(2, '0');
+    const minutes = String(selection.start.getMinutes()).padStart(2, '0');
+    
+    const datePart = `${year}-${month}-${day}`;
+    const timePart = `${hours}:${minutes}`;
+    
+    console.log("Calendar handleSelect:", { 
+      startStr: selection.startStr, 
+      datePart, 
+      timePart,
+      localDate: selection.start,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+    });
     
     // Verificar si el slot está ocupado
     const { occupied, reason } = isSlotOccupied(datePart, timePart);
     
     if (occupied) {
-      toast.error(reason || "Este horario no está disponible", {
-        duration: 4000,
-        position: "top-center",
-      });
+      toast.error(reason || "Este horario no está disponible");
       return;
     }
     
-    toast.success("Horario seleccionado correctamente", {
-      duration: 2000,
-      position: "top-center",
-    });
+    toast.success("Horario seleccionado correctamente");
     onSlotSelect(datePart, timePart);
   };
 
@@ -109,6 +118,7 @@ export function Calendar({ onSlotSelect, selectedDate, selectedTime, bookings = 
         ref={calendarRef}
         plugins={[timeGridPlugin, interactionPlugin]}
         initialView="timeGridWeek"
+        timeZone="local"
         headerToolbar={{
           left: 'prev,next today',
           center: 'title',
