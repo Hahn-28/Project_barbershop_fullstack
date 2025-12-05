@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -6,6 +6,8 @@ import { AlertCircle, Loader2, RefreshCw } from "lucide-react";
 import { Toaster } from "@/components/ui/sonner";
 import { getNameFromToken, getRoleFromToken } from "@/lib/auth";
 import { useWorkerBookings } from "@/lib/hooks/useWorkerBookings";
+import { PersonalCalendar } from "@/components/PersonalCalendar";
+import type { EventInput } from "@fullcalendar/core";
 
 interface WorkerDashboardProps {
   onLogout: () => void;
@@ -22,6 +24,20 @@ export function WorkerDashboard({ onLogout }: WorkerDashboardProps) {
   const filtered = bookings.filter(b => statusFilter === "ALL" ? true : b.status === statusFilter);
   const userName = getNameFromToken();
   const userRole = getRoleFromToken();
+
+  // Convertir reservas a eventos de calendario
+  const calendarEvents: EventInput[] = useMemo(() => {
+    return bookings.map(b => ({
+      id: String(b.id),
+      title: b.service?.name || 'Reserva',
+      start: new Date(b.date).toISOString(),
+      end: new Date(new Date(b.date).getTime() + 60 * 60 * 1000).toISOString(),
+      extendedProps: {
+        status: b.status,
+        clientName: b.user?.name,
+      }
+    }));
+  }, [bookings]);
 
   return (
     <>
@@ -40,7 +56,7 @@ export function WorkerDashboard({ onLogout }: WorkerDashboardProps) {
           </Button>
         </div>
 
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-6">
           <div className="flex gap-3">
             <select
               value={statusFilter}
@@ -58,67 +74,89 @@ export function WorkerDashboard({ onLogout }: WorkerDashboardProps) {
           </div>
         </div>
 
-        {loading && (
-          <div className="flex flex-col items-center justify-center py-12">
-            <Loader2 className="w-12 h-12 text-gold animate-spin mb-4" />
-            <p className="text-white text-lg">Cargando reservas...</p>
-          </div>
-        )}
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+          {/* Columna izquierda: Lista de reservas (tarjetas) */}
+          <div className="lg:col-span-1 order-2 lg:order-1">
+            {loading && (
+              <div className="flex flex-col items-center justify-center py-12">
+                <Loader2 className="w-12 h-12 text-gold animate-spin mb-4" />
+                <p className="text-white text-sm">Cargando...</p>
+              </div>
+            )}
 
-        {error && !loading && (
-          <Alert className="mb-6 border-red-500/40 bg-red-500/10">
-            <AlertCircle className="h-5 w-5 text-red-500" />
-            <AlertTitle className="text-red-500">Error al cargar reservas</AlertTitle>
-            <AlertDescription className="text-red-300">
-              {error}
-              <Button onClick={loadWorkerBookings} className="ml-4 bg-red-600 hover:bg-red-700 text-white" size="sm">
-                <RefreshCw className="w-4 h-4 mr-2" /> Reintentar
-              </Button>
-            </AlertDescription>
-          </Alert>
-        )}
+            {error && !loading && (
+              <Alert className="mb-6 border-red-500/40 bg-red-500/10">
+                <AlertCircle className="h-5 w-5 text-red-500" />
+                <AlertTitle className="text-red-500 text-sm">Error</AlertTitle>
+                <AlertDescription className="text-red-300 text-xs">
+                  {error}
+                  <Button onClick={loadWorkerBookings} className="mt-2 bg-red-600 hover:bg-red-700 text-white w-full" size="sm">
+                    <RefreshCw className="w-4 h-4 mr-2" /> Reintentar
+                  </Button>
+                </AlertDescription>
+              </Alert>
+            )}
 
-        {!loading && filtered.length === 0 && !error && (
-          <Card className="p-8 bg-gray-dark border border-gray-light/20 text-center">
-            <p className="text-gray-300">No tienes reservas asignadas con este estado</p>
-          </Card>
-        )}
-
-        {!loading && filtered.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {filtered.map((b) => (
-              <Card key={b.id} className="p-6 bg-gray-dark border border-gray-light/20">
-                <div className="flex items-start justify-between">
-                  <div className="space-y-1">
-                    <h4 className="text-white mb-1">{b.service?.name || `Servicio #${b.serviceId}`}</h4>
-                    <p className="text-gray-400">{new Date(b.date).toLocaleString()}</p>
-                    {b.user && (
-                      <p className="text-sm text-gray-300">Cliente: <span className="text-white font-semibold">{b.user.name}</span> <span className="text-gray-400 text-xs">{b.user.email}</span></p>
-                    )}
-                  </div>
-                  <div className="text-right">
-                    {b.service?.price != null && (
-                      <p className="text-gold mb-2">S/ {Number(b.service.price).toFixed(2)}</p>
-                    )}
-                    <span className="px-3 py-1 rounded-full text-sm bg-gold/10 text-gold">{b.status}</span>
-                  </div>
-                </div>
-                <div className="mt-4 flex justify-end gap-3">
-                  {b.status !== "CONFIRMED" && (
-                    <Button onClick={() => confirmBooking(b.id)} className="bg-green-600 hover:bg-green-700 text-white">
-                      Confirmar
-                    </Button>
-                  )}
-                  {b.status !== "CANCELLED" && (
-                    <Button onClick={() => cancelBooking(b.id)} className="bg-red-600 hover:bg-red-700 text-white">
-                      Rechazar
-                    </Button>
-                  )}
-                </div>
+            {!loading && filtered.length === 0 && !error && (
+              <Card className="p-6 bg-gray-dark border border-gray-light/20 text-center">
+                <p className="text-gray-300 text-sm">No hay reservas con este estado</p>
               </Card>
-            ))}
+            )}
+
+            {!loading && filtered.length > 0 && (
+              <div className="flex flex-col gap-4">
+                {filtered.map((b) => (
+                  <Card key={b.id} className="p-4 bg-gray-dark border border-gray-light/20">
+                    <div className="space-y-2">
+                      <div>
+                        <h4 className="text-white text-sm font-semibold mb-1">{b.service?.name || `Servicio #${b.serviceId}`}</h4>
+                        <p className="text-gray-400 text-xs">{new Date(b.date).toLocaleString('es-ES', { 
+                          day: '2-digit', 
+                          month: '2-digit', 
+                          hour: '2-digit', 
+                          minute: '2-digit' 
+                        })}</p>
+                      </div>
+                      {b.user && (
+                        <p className="text-xs text-gray-300">
+                          <span className="text-white font-semibold">{b.user.name}</span>
+                          <br />
+                          <span className="text-gray-400">{b.user.email}</span>
+                        </p>
+                      )}
+                      <div className="flex items-center justify-between">
+                        {b.service?.price != null && (
+                          <p className="text-gold text-sm font-bold">S/ {Number(b.service.price).toFixed(2)}</p>
+                        )}
+                        <span className="px-2 py-1 rounded-full text-xs bg-gold/10 text-gold">{b.status}</span>
+                      </div>
+                      <div className="flex flex-col gap-2 mt-3">
+                        {b.status !== "CONFIRMED" && (
+                          <Button onClick={() => confirmBooking(b.id)} className="bg-green-600 hover:bg-green-700 text-white w-full text-xs py-1" size="sm">
+                            Confirmar
+                          </Button>
+                        )}
+                        {b.status !== "CANCELLED" && (
+                          <Button onClick={() => cancelBooking(b.id)} className="bg-red-600 hover:bg-red-700 text-white w-full text-xs py-1" size="sm">
+                            Rechazar
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            )}
           </div>
-        )}
+
+          {/* Columna derecha: Calendario personal */}
+          <div className="lg:col-span-4 order-1 lg:order-2">
+            <PersonalCalendar 
+              bookings={calendarEvents} 
+              title="Mis Reservas Asignadas"
+            />
+          </div>
+        </div>
       </div>
     </>
   );

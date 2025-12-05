@@ -37,3 +37,15 @@ export function isAdmin(): boolean {
 export function isWorker(): boolean {
   return getRoleFromToken() === "WORKER";
 }
+
+export function getUserIdFromToken(): number | null {
+  const token = getToken();
+  if (!token) return null;
+  try {
+    const payload = token.split(".")[1];
+    const json = JSON.parse(typeof atob === "function" ? atob(payload) : Buffer.from(payload, "base64").toString("utf8"));
+    return json?.id ? Number(json.id) : null;
+  } catch {
+    return null;
+  }
+}

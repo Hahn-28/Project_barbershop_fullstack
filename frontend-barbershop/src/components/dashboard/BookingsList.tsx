@@ -68,33 +68,38 @@ export function BookingsList({
       )}
 
       {!loading && filteredBookings.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="flex flex-col gap-4">
           {filteredBookings.map((b) => (
-            <Card key={b.id} className="p-6 bg-gray-dark border border-gray-light/20">
-              <div className="flex items-start justify-between">
+            <Card key={b.id} className="p-4 bg-gray-dark border border-gray-light/20">
+              <div className="space-y-2">
                 <div>
-                  <h4 className="text-white mb-1">{b.service?.name || `Servicio #${b.serviceId}`}</h4>
-                  <p className="text-gray-400">{new Date(b.date).toLocaleString()}</p>
-                  {(b.worker || b.notes) && (
-                    <p className="text-sm text-gray-300 mt-2">
-                      Barbero: <span className="text-gold">{b.worker?.name || b.notes}</span>
-                    </p>
-                  )}
+                  <h4 className="text-white text-sm font-semibold mb-1">{b.service?.name || `Servicio #${b.serviceId}`}</h4>
+                  <p className="text-gray-400 text-xs">{new Date(b.date).toLocaleString('es-ES', { 
+                    day: '2-digit', 
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                  })}</p>
                 </div>
-                <div className="text-right">
+                {(b.worker || b.notes) && (
+                  <p className="text-xs text-gray-300">
+                    Barbero: <span className="text-gold font-semibold">{b.worker?.name || b.notes}</span>
+                  </p>
+                )}
+                <div className="flex items-center justify-between pt-1">
                   {b.service?.price != null && (
-                    <p className="text-gold mb-2">S/ {Number(b.service.price).toFixed(2)}</p>
+                    <p className="text-gold text-sm font-bold">S/ {Number(b.service.price).toFixed(2)}</p>
                   )}
-                  <span className="px-3 py-1 rounded-full text-sm bg-gold/10 text-gold">
+                  <span className="px-2 py-1 rounded-full text-xs bg-gold/10 text-gold">
                     {b.status}
                   </span>
                 </div>
-              </div>
-              <div className="mt-4 flex justify-end gap-3">
                 {b.status !== "CANCELLED" && (
                   <Button
                     onClick={() => onCancel(b.id)}
-                    className="bg-red-600 hover:bg-red-700 text-white"
+                    className="bg-red-600 hover:bg-red-700 text-white w-full text-xs py-2 mt-2"
+                    size="sm"
                   >
                     Cancelar
                   </Button>

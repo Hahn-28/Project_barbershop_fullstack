@@ -4,6 +4,8 @@ import { api } from "@/lib/api";
 import { Toaster } from "@/components/ui/sonner";
 import { Scissors, User, Clock, Check } from 'lucide-react';
 import { Calendar } from './Calendar';
+import { getUserIdFromToken } from '@/lib/auth';
+import type { EventInput } from '@fullcalendar/core';
 
 interface BookingModuleProps {
   readonly onBookingComplete?: () => void;
@@ -24,6 +26,8 @@ export function BookingModule({ onBookingComplete }: BookingModuleProps) {
   const [workers, setWorkers] = useState<Worker[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [allBookings, setAllBookings] = useState<EventInput[]>([]);
+  const clientId = getUserIdFromToken();
 
   useEffect(() => {
     (async () => {
@@ -48,6 +52,32 @@ export function BookingModule({ onBookingComplete }: BookingModuleProps) {
         const message = err instanceof Error ? err.message : "No se pudieron cargar barberos";
         console.error(message);
         setWorkers([]);
+      }
+    })();
+  }, []);
+
+  // Cargar todas las reservas para validación
+  useEffect(() => {
+    (async () => {
+      try {
+        const bookings = await api.allBookings() as any[];
+        const events: EventInput[] = bookings.map(b => ({
+          id: String(b.id),
+          title: b.service?.name || 'Reserva',
+          start: new Date(b.date).toISOString(),
+          end: new Date(new Date(b.date).getTime() + 60 * 60 * 1000).toISOString(),
+          backgroundColor: b.status === 'CONFIRMED' ? 'rgba(34, 197, 94, 0.9)' : 
+                          b.status === 'PENDING' ? 'rgba(212, 175, 55, 0.9)' : 
+                          'rgba(239, 68, 68, 0.7)',
+          extendedProps: {
+            status: b.status,
+            workerId: b.workerId,
+            userId: b.userId,
+          }
+        }));
+        setAllBookings(events);
+      } catch (err) {
+        console.error("Error loading bookings:", err);
       }
     })();
   }, []);
@@ -84,7 +114,7 @@ export function BookingModule({ onBookingComplete }: BookingModuleProps) {
         date: dateIso, 
         time: selectedTime, 
         notes: selectedBarber 
-      } as any);
+      });
       
       console.log("Booking created successfully:", result);
       alert("¡Reserva creada correctamente!");
@@ -254,6 +284,9 @@ export function BookingModule({ onBookingComplete }: BookingModuleProps) {
                 }}
                 selectedDate={selectedDate}
                 selectedTime={selectedTime}
+                bookings={allBookings}
+                workerId={selectedWorkerId || undefined}
+                clientId={clientId || undefined}
               />
               {selectedDate && selectedTime && (
                 <div className="mt-4 p-4 bg-gold/10 border border-gold/30 rounded-lg text-center">
