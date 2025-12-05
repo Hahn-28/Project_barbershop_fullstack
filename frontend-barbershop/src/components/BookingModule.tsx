@@ -145,13 +145,24 @@ export function BookingModule({ onBookingComplete }: { onBookingComplete?: () =>
                         : 'border-gray-light/20 bg-gray-dark hover:border-gold/50'
                     }`}
                   >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h4 className="text-white mb-1">{service.name}</h4>
-                        {service.price != null && <p className="text-gold">S/ {Number(service.price).toFixed(2)}</p>}
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1">
+                        <h4 className="text-white font-semibold mb-2">{service.name}</h4>
+                        {service.description && (
+                          <p className="text-gray-400 text-sm mb-3 line-clamp-2">{service.description}</p>
+                        )}
+                        <div className="flex items-center gap-4">
+                          {service.price != null && (
+                            <p className="text-gold font-bold text-lg">S/ {Number(service.price).toFixed(2)}</p>
+                          )}
+                          <div className="flex items-center gap-1 text-gray-400 text-sm">
+                            <Clock className="w-4 h-4" />
+                            <span>30-60 min</span>
+                          </div>
+                        </div>
                       </div>
                       {selectedService === service.name && (
-                        <Check className="w-6 h-6 text-gold" />
+                        <Check className="w-6 h-6 text-gold flex-shrink-0" />
                       )}
                     </div>
                   </button>
