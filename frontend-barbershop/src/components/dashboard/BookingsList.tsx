@@ -2,6 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, Calendar, Loader2, RefreshCw } from "lucide-react";
+import { useState } from "react";
 import type { Booking } from "@/lib/hooks/useBookings";
 
 interface BookingsListProps {
@@ -12,6 +13,7 @@ interface BookingsListProps {
   onRefresh: () => Promise<void>;
   onCancel: (id: number) => Promise<void>;
   onNewBooking?: () => void;
+  isClient?: boolean;
 }
 
 export function BookingsList({
@@ -22,10 +24,37 @@ export function BookingsList({
   onRefresh,
   onCancel,
   onNewBooking,
+  isClient = false,
 }: BookingsListProps) {
+  const [cancellingId, setCancellingId] = useState<number | null>(null);
+  
   const filteredBookings = bookings.filter((b) =>
     statusFilter === "ALL" ? true : b.status === statusFilter
   );
+
+  // Función para verificar si se puede cancelar la reserva
+  const canCancelBooking = (bookingDate: string | Date): boolean => {
+    if (!isClient) return true; // Trabajadores y admins siempre pueden cancelar
+    
+    const booking = new Date(bookingDate);
+    const today = new Date();
+    
+    // Normalizar las fechas para comparar solo día, mes, año
+    const bookingDay = new Date(booking.getFullYear(), booking.getMonth(), booking.getDate());
+    const todayDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    
+    // Permitir cancelación solo si la reserva es de otro día
+    return bookingDay.getTime() !== todayDay.getTime();
+  };
+
+  const handleCancelClick = async (bookingId: number) => {
+    setCancellingId(bookingId);
+    try {
+      await onCancel(bookingId);
+    } finally {
+      setCancellingId(null);
+    }
+  };
 
   return (
     <>
@@ -97,11 +126,24 @@ export function BookingsList({
                 </div>
                 {b.status !== "CANCELLED" && (
                   <Button
-                    onClick={() => onCancel(b.id)}
-                    className="bg-red-600 hover:bg-red-700 text-white w-full text-xs py-2 mt-2"
+                    onClick={() => handleCancelClick(b.id)}
+                    disabled={!canCancelBooking(b.date) || cancellingId === b.id}
+                    title={!canCancelBooking(b.date) ? "No puedes cancelar reservas del mismo día" : "Cancelar reserva"}
+                    className={`w-full text-xs py-2 mt-2 ${
+                      !canCancelBooking(b.date) || cancellingId === b.id
+                        ? "bg-gray-600 text-gray-400 cursor-not-allowed opacity-50"
+                        : "bg-red-600 hover:bg-red-700 text-white"
+                    }`}
                     size="sm"
                   >
-                    Cancelar
+                    {cancellingId === b.id ? (
+                      <>
+                        <Loader2 className="w-3 h-3 mr-1 animate-spin inline" />
+                        Cancelando...
+                      </>
+                    ) : (
+                      "Cancelar"
+                    )}
                   </Button>
                 )}
               </div>

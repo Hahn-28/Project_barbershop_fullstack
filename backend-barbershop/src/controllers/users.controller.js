@@ -70,3 +70,79 @@ export const updateUserStatus = async (req, res) => {
     return errorResponse(res, "Failed to update user status", 500, error);
   }
 };
+
+export const getMyProfile = async (req, res) => {
+  try {
+    if (!req.user || !req.user.id) {
+      return errorResponse(res, "User not authenticated", 401);
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        role: true,
+        avatarUrl: true,
+        bio: true,
+        specialties: true,
+        isActive: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    if (!user) {
+      return errorResponse(res, "User not found", 404);
+    }
+
+    return successResponse(res, user, "Profile fetched successfully");
+  } catch (error) {
+    return errorResponse(res, "Failed to fetch profile", 500, error);
+  }
+};
+
+export const updateMyProfile = async (req, res) => {
+  try {
+    if (!req.user || !req.user.id) {
+      return errorResponse(res, "User not authenticated", 401);
+    }
+
+    const { name, email, phone, bio, avatarUrl, specialties } = req.body;
+
+    const updatedUser = await prisma.user.update({
+      where: { id: req.user.id },
+      data: {
+        ...(name && { name }),
+        ...(email && { email }),
+        ...(phone && { phone }),
+        ...(bio && { bio }),
+        ...(avatarUrl && { avatarUrl }),
+        ...(specialties && { specialties }),
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        role: true,
+        avatarUrl: true,
+        bio: true,
+        specialties: true,
+        isActive: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    return successResponse(
+      res,
+      updatedUser,
+      "Profile updated successfully"
+    );
+  } catch (error) {
+    return errorResponse(res, "Failed to update profile", 500, error);
+  }
+};

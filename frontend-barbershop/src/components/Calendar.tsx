@@ -187,38 +187,29 @@ export function Calendar({ onSlotSelect, selectedDate, selectedTime, bookings = 
           return ['event-occupied'];
         }}
         eventContent={(arg) => {
-          if (arg.event.id === 'selected-slot') return null;
-          
-          const type = arg.event.extendedProps?.type;
-          let label = 'Ocupado';
-          
-          if (type === 'client') label = 'Ocupado (Cliente)';
-          else if (type === 'worker') label = 'Ocupado (Trabajador)';
-          else if (type === 'both') label = 'Ocupado (Ambos)';
-          
-          return (
-            <div className="p-1 text-xs leading-tight">
-              <div className="font-semibold truncate text-white">{label}</div>
-            </div>
-          );
+          // No mostrar contenido, solo el color del evento indica su tipo
+          return null;
         }}
       />
-      <div className="mt-4 flex flex-wrap gap-3 text-sm">
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded" style={{background: 'rgba(34, 197, 94, 0.6)'}}></div>
-          <span className="text-gray-300">Mi Selección (Disponible)</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded" style={{background: 'rgba(212, 175, 55, 0.8)'}}></div>
-          <span className="text-gray-300">Ocupado (Cliente)</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded" style={{background: 'rgba(107, 114, 128, 0.8)'}}></div>
-          <span className="text-gray-300">Ocupado (Trabajador)</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded" style={{background: 'rgba(239, 68, 68, 0.8)'}}></div>
-          <span className="text-gray-300">Ocupado (Ambos)</span>
+      <div className="mt-6 p-4 bg-gray-dark/60 border border-gray-light/20 rounded-lg">
+        <p className="text-gold text-xs font-semibold uppercase tracking-wider mb-3">Leyenda de Colores</p>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="flex items-center gap-2">
+            <div className="w-5 h-5 rounded border-2 border-gold/50" style={{background: 'rgba(34, 197, 94, 0.6)'}}></div>
+            <span className="text-gray-300 text-xs">Tu Selección</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-5 h-5 rounded border-2 border-gold/50" style={{background: 'rgba(212, 175, 55, 0.8)'}}></div>
+            <span className="text-gray-300 text-xs">Cliente</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-5 h-5 rounded border-2 border-gold/50" style={{background: 'rgba(107, 114, 128, 0.8)'}}></div>
+            <span className="text-gray-300 text-xs">Trabajador</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-5 h-5 rounded border-2 border-gold/50" style={{background: 'rgba(239, 68, 68, 0.8)'}}></div>
+            <span className="text-gray-300 text-xs">Ambos</span>
+          </div>
         </div>
       </div>
       <style jsx global>{`

@@ -181,18 +181,25 @@ export const updateBookingStatus = async (req, res) => {
 
     const booking = await prisma.booking.findUnique({
       where: { id: parseInt(id) },
-      include: { worker: true },
+      include: { worker: true, user: true },
     });
 
     if (!booking) {
       return errorResponse(res, "Booking not found", 404);
     }
 
-    // Authorization: admin or the assigned worker
+    // Authorization checks
     const isAdmin = req.user?.role === "ADMIN";
     const isWorkerOwner = req.user?.role === "WORKER" && booking.workerId === req.user.id;
-    if (!isAdmin && !isWorkerOwner) {
+    const isClientOwner = req.user?.role === "CLIENT" && booking.userId === req.user.id;
+    
+    if (!isAdmin && !isWorkerOwner && !isClientOwner) {
       return errorResponse(res, "Not authorized to update this booking", 403);
+    }
+
+    // Clients can only cancel bookings, not confirm them
+    if (isClientOwner && status !== "CANCELLED") {
+      return errorResponse(res, "Clients can only cancel bookings", 403);
     }
 
     const updatedBooking = await prisma.booking.update({

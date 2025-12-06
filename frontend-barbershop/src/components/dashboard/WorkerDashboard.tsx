@@ -6,6 +6,7 @@ import { AlertCircle, Loader2, RefreshCw } from "lucide-react";
 import { Toaster } from "@/components/ui/sonner";
 import { getNameFromToken, getRoleFromToken } from "@/lib/auth";
 import { useWorkerBookings } from "@/lib/hooks/useWorkerBookings";
+import { ProfileCard } from "./ProfileCard";
 import { PersonalCalendar } from "@/components/PersonalCalendar";
 import type { EventInput } from "@fullcalendar/core";
 
@@ -16,6 +17,7 @@ interface WorkerDashboardProps {
 export function WorkerDashboard({ onLogout }: WorkerDashboardProps) {
   const { bookings, loading, error, loadWorkerBookings, confirmBooking, cancelBooking } = useWorkerBookings();
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const [activeView, setActiveView] = useState<"bookings" | "profile">("bookings");
 
   useEffect(() => {
     loadWorkerBookings();
@@ -71,24 +73,65 @@ export function WorkerDashboard({ onLogout }: WorkerDashboardProps) {
 
         {/* Main Content */}
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-            <h2 className="text-white text-2xl font-bold">Mis Reservas Asignadas</h2>
-            <div className="flex gap-3 w-full sm:w-auto">
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="bg-gray-medium/80 backdrop-blur border border-gray-light/20 text-white px-4 py-2.5 rounded-lg text-sm focus:ring-2 focus:ring-gold/50 transition flex-1 sm:flex-none"
-              >
-                <option value="ALL">Todos</option>
-                <option value="PENDING">Pendiente</option>
-                <option value="CONFIRMED">Confirmada</option>
-                <option value="CANCELLED">Cancelada</option>
-              </select>
-              <Button onClick={loadWorkerBookings} className="bg-gold text-dark hover:bg-gold/90 rounded-lg shadow-lg hover:shadow-gold/30 transition-all">
-                <RefreshCw className="w-4 h-4 mr-2" /> Actualizar
-              </Button>
-            </div>
+          {/* Tabs Navigation */}
+          <div className="flex gap-4 mb-8 border-b border-gray-light/10 pb-0">
+            <button
+              onClick={() => setActiveView("bookings")}
+              className={`pb-4 px-1 font-semibold transition-all ${
+                activeView === "bookings"
+                  ? "text-gold border-b-2 border-gold"
+                  : "text-gray-400 hover:text-white"
+              }`}
+            >
+              Mis Reservas
+            </button>
+            <button
+              onClick={() => setActiveView("profile")}
+              className={`pb-4 px-1 font-semibold transition-all ${
+                activeView === "profile"
+                  ? "text-gold border-b-2 border-gold"
+                  : "text-gray-400 hover:text-white"
+              }`}
+            >
+              Mi Perfil
+            </button>
           </div>
+
+          {/* Profile View */}
+          {activeView === "profile" && (
+            <ProfileCard
+              onLogout={onLogout}
+              role={userRole || "WORKER"}
+              bookingStats={{
+                confirmed: bookings.filter(b => b.status === "CONFIRMED").length,
+                pending: bookings.filter(b => b.status === "PENDING").length,
+                cancelled: bookings.filter(b => b.status === "CANCELLED").length,
+                total: bookings.length,
+              }}
+            />
+          )}
+
+          {/* Bookings View */}
+          {activeView === "bookings" && (
+            <>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+                <h2 className="text-white text-2xl font-bold">Mis Reservas Asignadas</h2>
+                <div className="flex gap-3 w-full sm:w-auto">
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="bg-gray-medium/80 backdrop-blur border border-gray-light/20 text-white px-4 py-2.5 rounded-lg text-sm focus:ring-2 focus:ring-gold/50 transition flex-1 sm:flex-none"
+                  >
+                    <option value="ALL">Todos</option>
+                    <option value="PENDING">Pendiente</option>
+                    <option value="CONFIRMED">Confirmada</option>
+                    <option value="CANCELLED">Cancelada</option>
+                  </select>
+                  <Button onClick={loadWorkerBookings} className="bg-gold text-dark hover:bg-gold/90 rounded-lg shadow-lg hover:shadow-gold/30 transition-all">
+                    <RefreshCw className="w-4 h-4 mr-2" /> Actualizar
+                  </Button>
+                </div>
+              </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-6 items-start">
             {/* Columna izquierda: Lista de reservas (tarjetas) */}
@@ -176,7 +219,9 @@ export function WorkerDashboard({ onLogout }: WorkerDashboardProps) {
                 />
               </div>
             </div>
-          </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </>

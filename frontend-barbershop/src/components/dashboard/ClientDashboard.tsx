@@ -3,6 +3,7 @@ import { getRoleFromToken, getNameFromToken } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { BookingModule } from "@/components/BookingModule";
 import { BookingsList } from "./BookingsList";
+import { ProfileCard } from "./ProfileCard";
 import { useBookings } from "@/lib/hooks/useBookings";
 import { Toaster } from "@/components/ui/sonner";
 import { PersonalCalendar } from "@/components/PersonalCalendar";
@@ -13,7 +14,7 @@ interface ClientDashboardProps {
 }
 
 export function ClientDashboard({ onLogout }: ClientDashboardProps) {
-  const [activeView, setActiveView] = useState<"bookings" | "new">("bookings");
+  const [activeView, setActiveView] = useState<"bookings" | "new" | "profile">("bookings");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const { bookings, loading, error, loadBookings, cancelBooking } = useBookings();
 
@@ -92,6 +93,16 @@ export function ClientDashboard({ onLogout }: ClientDashboardProps) {
             >
               Nueva Reserva
             </button>
+            <button
+              onClick={() => setActiveView("profile")}
+              className={`py-3 px-6 font-semibold border-b-2 transition-all rounded-t-lg ${
+                activeView === "profile"
+                  ? "border-gold text-gold bg-gold/5"
+                  : "border-transparent text-gray-400 hover:text-white hover:bg-white/5"
+              }`}
+            >
+              Mi Perfil
+            </button>
           </div>
 
           {activeView === "bookings" ? (
@@ -126,6 +137,7 @@ export function ClientDashboard({ onLogout }: ClientDashboardProps) {
                     onRefresh={loadBookings}
                     onCancel={cancelBooking}
                     onNewBooking={() => setActiveView("new")}
+                    isClient={true}
                   />
                 </div>
               </div>
@@ -140,6 +152,17 @@ export function ClientDashboard({ onLogout }: ClientDashboardProps) {
                 </div>
               </div>
             </div>
+          ) : activeView === "profile" ? (
+            <ProfileCard
+              onLogout={onLogout}
+              role={userRole || "CLIENT"}
+              bookingStats={{
+                confirmed: bookings.filter(b => b.status === "CONFIRMED").length,
+                pending: bookings.filter(b => b.status === "PENDING").length,
+                cancelled: bookings.filter(b => b.status === "CANCELLED").length,
+                total: bookings.length,
+              }}
+            />
           ) : (
             <div className="bg-gray-dark/60 backdrop-blur-sm border border-gray-light/10 rounded-2xl p-8 shadow-xl">
               <BookingModule

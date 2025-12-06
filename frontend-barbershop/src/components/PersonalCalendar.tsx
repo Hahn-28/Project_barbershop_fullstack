@@ -15,9 +15,23 @@ export function PersonalCalendar({ bookings, title = "Mi Calendario" }: Personal
 
   return (
     <div className="personal-calendar-container bg-gray-dark border border-gray-light/20 rounded-lg p-4">
-      <h3 className="text-white text-lg font-semibold mb-4 pb-2 border-b border-gold/30">
+      <h3 className="text-white text-lg font-semibold mb-2 pb-2 border-b border-gold/30">
         {title}
       </h3>
+      <div className="flex gap-6 mb-4 text-xs">
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 rounded bg-green-500"></div>
+          <span className="text-gray-300">Confirmada</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 rounded bg-yellow-500"></div>
+          <span className="text-gray-300">Pendiente</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 rounded bg-red-500"></div>
+          <span className="text-gray-300">Cancelada</span>
+        </div>
+      </div>
       <div className="calendar-wrapper">
         <FullCalendar
           ref={calendarRef}

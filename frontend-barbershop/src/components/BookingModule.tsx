@@ -399,36 +399,103 @@ export function BookingModule({ onBookingComplete }: BookingModuleProps) {
           {step === 2 && (
             <div>
               <h3 className="text-white mb-6">Elige tu barbero</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {workers.map((barber) => (
-                  <button
-                    key={barber.id}
-                    onClick={() => { setSelectedBarber(barber.name); setSelectedWorkerId(barber.id); }}
-                    className={`p-6 rounded-lg border-2 text-left transition-all duration-300 ${
-                      selectedWorkerId === barber.id
-                        ? 'border-gold bg-gold/10'
-                        : 'border-gray-light/20 bg-gray-dark hover:border-gold/50'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="text-white font-semibold">{barber.name}</h4>
-                      {selectedBarber === barber.name && (
-                        <Check className="w-6 h-6 text-gold" />
-                      )}
-                    </div>
-                    {barber.specialties && (
-                      <p className="text-gold text-sm mb-1">{barber.specialties}</p>
-                    )}
-                    {barber.bio && (
-                      <p className="text-gray-400 text-sm line-clamp-2 mb-2">{barber.bio}</p>
-                    )}
-                    {barber.phone && (
-                      <p className="text-gray-500 text-xs">Tel: {barber.phone}</p>
-                    )}
-                  </button>
-                ))}
-                {workers.length === 0 && (
-                  <p className="text-gray-400">No hay barberos disponibles.</p>
+              <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                {/* Barberos List */}
+                <div className="lg:col-span-2 space-y-3">
+                  {workers.map((barber) => (
+                    <button
+                      key={barber.id}
+                      onClick={() => { setSelectedBarber(barber.name); setSelectedWorkerId(barber.id); }}
+                      className={`w-full p-4 rounded-lg border-2 text-left transition-all duration-300 ${
+                        selectedWorkerId === barber.id
+                          ? 'border-gold bg-gold/10'
+                          : 'border-gray-light/20 bg-gray-dark hover:border-gold/50'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex-1">
+                          <h4 className="text-white font-semibold">{barber.name}</h4>
+                          {barber.specialties && (
+                            <p className="text-gold text-xs mt-1">{barber.specialties}</p>
+                          )}
+                        </div>
+                        {selectedBarber === barber.name && (
+                          <Check className="w-5 h-5 text-gold shrink-0" />
+                        )}
+                      </div>
+                    </button>
+                  ))}
+                  {workers.length === 0 && (
+                    <p className="text-gray-400">No hay barberos disponibles.</p>
+                  )}
+                </div>
+
+                {/* Worker Profile Preview */}
+                {selectedWorkerId && workers.length > 0 && (
+                  <div className="lg:col-span-2">
+                    {(() => {
+                      const selectedWorker = workers.find(w => w.id === selectedWorkerId);
+                      return selectedWorker ? (
+                        <div className="bg-gradient-to-br from-gray-dark via-gray-dark to-gray-medium border border-gold/30 rounded-xl p-6 sticky top-4">
+                          <div className="space-y-4">
+                            {/* Avatar */}
+                            <div className="flex justify-center">
+                              {selectedWorker.avatarUrl ? (
+                                <img 
+                                  src={selectedWorker.avatarUrl} 
+                                  alt={selectedWorker.name}
+                                  className="w-24 h-24 rounded-full object-cover border-3 border-gold"
+                                />
+                              ) : (
+                                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-gold to-gold/50 flex items-center justify-center border-3 border-gold">
+                                  <User className="w-12 h-12 text-dark" />
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Name */}
+                            <div className="text-center">
+                              <h4 className="text-white text-xl font-bold">{selectedWorker.name}</h4>
+                              <p className="text-gold text-sm mt-1">✨ Barbero profesional</p>
+                            </div>
+
+                            {/* Specialties */}
+                            {selectedWorker.specialties && (
+                              <div className="space-y-2">
+                                <p className="text-gold text-xs font-semibold uppercase tracking-wider">Especialidades</p>
+                                <p className="text-gray-200 text-sm leading-relaxed">{selectedWorker.specialties}</p>
+                              </div>
+                            )}
+
+                            {/* Bio */}
+                            {selectedWorker.bio && (
+                              <div className="space-y-2 py-3 border-y border-gray-light/20">
+                                <p className="text-gold text-xs font-semibold uppercase tracking-wider">Acerca de</p>
+                                <p className="text-gray-300 text-sm leading-relaxed">{selectedWorker.bio}</p>
+                              </div>
+                            )}
+
+                            {/* Contact */}
+                            {selectedWorker.phone && (
+                              <div className="space-y-2">
+                                <p className="text-gold text-xs font-semibold uppercase tracking-wider">Contacto</p>
+                                <p className="text-gray-300 text-sm font-mono bg-gray-dark/50 px-3 py-2 rounded border border-gray-light/20">
+                                  📱 {selectedWorker.phone}
+                                </p>
+                              </div>
+                            )}
+
+                            {/* CTA */}
+                            <div className="pt-2 border-t border-gray-light/20">
+                              <p className="text-center text-gray-400 text-xs">
+                                Continúa para ver disponibilidad
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      ) : null;
+                    })()}
+                  </div>
                 )}
               </div>
             </div>
@@ -448,17 +515,89 @@ export function BookingModule({ onBookingComplete }: BookingModuleProps) {
                   </p>
                 </div>
               )}
-              <Calendar 
-                onSlotSelect={(date, time) => {
-                  setSelectedDate(date);
-                  setSelectedTime(time);
-                }}
-                selectedDate={selectedDate}
-                selectedTime={selectedTime}
-                bookings={relevantBookings}
-                workerId={selectedWorkerId || undefined}
-                clientId={clientId || undefined}
-              />
+              
+              {/* Worker Profile Card */}
+              {selectedWorkerId && workers.length > 0 && (
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-6">
+                  {/* Worker Info */}
+                  {(() => {
+                    const selectedWorker = workers.find(w => w.id === selectedWorkerId);
+                    return selectedWorker ? (
+                      <div className="lg:col-span-1">
+                        <div className="bg-gradient-to-br from-gray-dark via-gray-dark to-gray-medium border border-gold/20 rounded-xl p-6 h-full flex flex-col justify-between">
+                          {/* Avatar Placeholder */}
+                          <div className="flex justify-center mb-4">
+                            {selectedWorker.avatarUrl ? (
+                              <img 
+                                src={selectedWorker.avatarUrl} 
+                                alt={selectedWorker.name}
+                                className="w-20 h-20 rounded-full object-cover border-2 border-gold"
+                              />
+                            ) : (
+                              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-gold to-gold/50 flex items-center justify-center border-2 border-gold">
+                                <User className="w-10 h-10 text-dark" />
+                              </div>
+                            )}
+                          </div>
+                          
+                          {/* Worker Details */}
+                          <div className="text-center space-y-3 flex-1">
+                            <h4 className="text-white text-lg font-semibold">{selectedWorker.name}</h4>
+                            
+                            {selectedWorker.specialties && (
+                              <div className="space-y-1">
+                                <p className="text-gold text-xs font-semibold uppercase tracking-wider">Especialidades</p>
+                                <p className="text-gray-300 text-sm">{selectedWorker.specialties}</p>
+                              </div>
+                            )}
+                            
+                            {selectedWorker.bio && (
+                              <div className="space-y-1">
+                                <p className="text-gold text-xs font-semibold uppercase tracking-wider">Descripción</p>
+                                <p className="text-gray-400 text-xs line-clamp-3">{selectedWorker.bio}</p>
+                              </div>
+                            )}
+                            
+                            {selectedWorker.phone && (
+                              <div className="space-y-1 pt-2 border-t border-gray-light/20">
+                                <p className="text-gold text-xs font-semibold uppercase tracking-wider">Contacto</p>
+                                <p className="text-gray-300 text-sm font-mono">{selectedWorker.phone}</p>
+                              </div>
+                            )}
+                          </div>
+                          
+                          {/* Call to Action */}
+                          <div className="mt-4 pt-4 border-t border-gray-light/20">
+                            <p className="text-gold text-xs text-center">✨ Perfil verificado</p>
+                          </div>
+                        </div>
+                      </div>
+                    ) : null;
+                  })()}
+                  
+                  {/* Calendar */}
+                  <div className="lg:col-span-3">
+                    <Calendar 
+                      onSlotSelect={(date, time) => {
+                        setSelectedDate(date);
+                        setSelectedTime(time);
+                      }}
+                      selectedDate={selectedDate}
+                      selectedTime={selectedTime}
+                      bookings={relevantBookings}
+                      workerId={selectedWorkerId || undefined}
+                      clientId={clientId || undefined}
+                    />
+                  </div>
+                </div>
+              )}
+              
+              {!selectedWorkerId && (
+                <div className="bg-gray-dark border border-gray-light/20 rounded-lg p-8 text-center mb-6">
+                  <p className="text-gray-400">Vuelve al paso anterior para seleccionar un barbero</p>
+                </div>
+              )}
+              
               {selectedDate && selectedTime && (
                 <div className="mt-4 p-4 bg-gold/10 border border-gold/30 rounded-lg text-center">
                   <p className="text-gold">

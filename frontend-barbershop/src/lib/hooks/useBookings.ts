@@ -59,22 +59,25 @@ export function useBookings() {
       let message = "No se pudo cancelar la reserva";
       
       if (err instanceof Error) {
-        if (err.message.includes('Not authorized')) {
+        const errorMsg = err.message.toLowerCase();
+        
+        if (errorMsg.includes('not authorized') || errorMsg.includes('no autorizado')) {
           message = "No tienes autorización para cancelar esta reserva. Solo puedes cancelar tus propias reservas.";
-        } else if (err.message.includes('403')) {
+        } else if (errorMsg.includes('403')) {
           message = "No tienes permisos para cancelar esta reserva.";
-        } else if (err.message.includes('404')) {
+        } else if (errorMsg.includes('404')) {
           message = "La reserva no existe o ya fue eliminada.";
-        } else if (err.message.includes('400')) {
-          message = "Esta reserva no puede ser cancelada.";
+        } else if (errorMsg.includes('400')) {
+          message = "Esta reserva no puede ser cancelada en este momento.";
+        } else if (errorMsg.includes('cannot be cancelled')) {
+          message = "Esta reserva no puede ser cancelada porque ya fue confirmada o se encuentra en otro estado.";
         } else {
           message = err.message;
         }
       }
       
-      console.error("Error cancelling booking:", err);
+      // Mostrar toast sin registrar en console para evitar que se vea como error
       toast.error(message);
-      // No re-lanzar el error para evitar que se propague a la consola
     }
   }, [loadBookings]);
 

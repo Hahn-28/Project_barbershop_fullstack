@@ -50,15 +50,38 @@ export function useWorkerBookings() {
     try {
       await api.updateBookingStatus(id, status);
       toast.success(successMessage || `Reserva ${status.toLowerCase()}`);
+      // Recargar las reservas después de actualizar
       await loadWorkerBookings();
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "No se pudo actualizar la reserva";
+      let message = "No se pudo actualizar la reserva";
+      
+      if (err instanceof Error) {
+        const errorMsg = err.message.toLowerCase();
+        
+        if (errorMsg.includes('not authorized') || errorMsg.includes('no autorizado')) {
+          message = "No tienes autorización para modificar esta reserva.";
+        } else if (errorMsg.includes('403')) {
+          message = "No tienes permisos para modificar esta reserva.";
+        } else if (errorMsg.includes('404')) {
+          message = "La reserva no existe o ya fue eliminada.";
+        } else if (errorMsg.includes('400')) {
+          message = "Esta reserva no puede ser modificada en este momento.";
+        } else {
+          message = err.message;
+        }
+      }
+      
       toast.error(message);
     }
   }, [loadWorkerBookings]);
 
-  const confirmBooking = useCallback((id: number) => updateBookingStatus(id, "CONFIRMED", "Reserva confirmada"), [updateBookingStatus]);
-  const cancelBooking = useCallback((id: number) => updateBookingStatus(id, "CANCELLED", "Reserva cancelada"), [updateBookingStatus]);
+  const confirmBooking = useCallback((id: number) => {
+    updateBookingStatus(id, "CONFIRMED", "Reserva confirmada");
+  }, [updateBookingStatus]);
+  
+  const cancelBooking = useCallback((id: number) => {
+    updateBookingStatus(id, "CANCELLED", "Reserva rechazada");
+  }, [updateBookingStatus]);
 
   return {
     bookings,

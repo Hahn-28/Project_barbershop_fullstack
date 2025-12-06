@@ -13,9 +13,24 @@ type JsonValue = unknown;
 type ApiEnvelope<T = JsonValue> = { success?: boolean; message?: string; data?: T } | T;
 
 function extractMessage(raw: unknown): string | undefined {
-  if (raw && typeof raw === "object" && "message" in raw) {
-    const value = (raw as { message?: unknown }).message;
-    return typeof value === "string" ? value : undefined;
+  if (raw && typeof raw === "object") {
+    // Primero intenta con la propiedad 'message'
+    if ("message" in raw) {
+      const value = (raw as { message?: unknown }).message;
+      if (typeof value === "string") return value;
+    }
+    // Si no encuentra 'message', intenta con 'error'
+    if ("error" in raw) {
+      const value = (raw as { error?: unknown }).error;
+      if (typeof value === "string") return value;
+    }
+    // Si el objeto tiene una propiedad 'data' con un mensaje dentro
+    if ("data" in raw && raw.data && typeof raw.data === "object") {
+      if ("message" in raw.data) {
+        const value = (raw.data as { message?: unknown }).message;
+        if (typeof value === "string") return value;
+      }
+    }
   }
   return undefined;
 }
@@ -89,6 +104,10 @@ export const api = {
   // Users (admin)
   listUsers: () => http.get<unknown[]>("/users"),
   updateUserStatus: (id: number, isActive: boolean) => http.put(`/users/${id}/status`, { isActive }),
+
+  // Profile
+  getMyProfile: () => http.get("/users/me"),
+  updateMyProfile: (payload: Record<string, unknown>) => http.put("/users/me", payload),
 
   // Workers (client)
   listWorkers: () => http.get<unknown[]>("/users/workers"),
