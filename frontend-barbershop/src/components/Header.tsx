@@ -50,6 +50,9 @@ export function Header() {
             <button onClick={() => scrollToSection('reservas')} className="text-white hover:text-gold transition-colors font-medium px-2 py-1 rounded hover:bg-gold/10">
               Reservas
             </button>
+            <button onClick={() => scrollToSection('testimonios')} className="text-white hover:text-gold transition-colors font-medium px-2 py-1 rounded hover:bg-gold/10">
+              Testimonios
+            </button>
             <button onClick={() => scrollToSection('contacto')} className="text-white hover:text-gold transition-colors font-medium px-2 py-1 rounded hover:bg-gold/10">
               Contacto
             </button>

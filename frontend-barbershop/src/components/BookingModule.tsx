@@ -311,17 +311,13 @@ export function BookingModule({ onBookingComplete }: BookingModuleProps) {
 
   return (
     <section id="reservas" className="py-24 bg-gray-dark">
-      <div className="max-w-4xl mx-auto px-6">
-        <div className="text-center mb-12">
-          <div className="inline-block mb-4">
-            <span className="text-gold uppercase tracking-wider">Agenda tu cita</span>
-          </div>
-          <h2 className="text-white mb-4">Sistema de Reservas</h2>
-          <p className="text-gray-400">
-            Reserva tu cita en pocos pasos. Es rápido y sencillo.
-          </p>
+      <div className="max-w-6xl mx-auto px-6 lg:px-8 space-y-10">
+        <div className="text-center space-y-3">
+          <p className="text-gold uppercase tracking-[0.2em] text-xs sm:text-sm">Agenda tu cita</p>
+          <h2 className="text-white text-3xl sm:text-4xl font-semibold">Sistema de reservas en 3 pasos</h2>
+          <p className="text-gray-300 max-w-2xl mx-auto">Elige servicio, barbero y horario en minutos. Confirmación inmediata y recordatorios automáticos.</p>
         </div>
-          <Toaster />
+        <Toaster />
 
         {/* Progress Steps */}
         <div className="flex items-center justify-between mb-12 relative">
@@ -357,7 +353,7 @@ export function BookingModule({ onBookingComplete }: BookingModuleProps) {
         </div>
 
         {/* Booking Form */}
-        <div className="bg-gray-medium p-8 rounded-lg border border-gray-light/20">
+        <div className="bg-gray-medium/90 backdrop-blur p-8 rounded-xl border border-gray-light/20 shadow-xl">
           {/* Step 1: Select Service */}
           {step === 1 && (
             <div>

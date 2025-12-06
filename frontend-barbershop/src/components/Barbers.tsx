@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import { CalendarDays } from 'lucide-react';
 
 export function Barbers() {
   const barbers = [
@@ -37,22 +38,27 @@ export function Barbers() {
 
   return (
     <section id="barberos" className="py-24 bg-dark">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="text-center mb-16">
-          <div className="inline-block mb-4">
-            <span className="text-gold uppercase tracking-wider">Nuestro Equipo</span>
+      <div className="max-w-7xl mx-auto px-6 space-y-10">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+          <div className="space-y-3 max-w-2xl">
+            <p className="text-gold uppercase tracking-[0.2em] text-xs sm:text-sm">Nuestro equipo</p>
+            <h2 className="text-white text-3xl sm:text-4xl font-semibold">Barberos expertos y certificados</h2>
+            <p className="text-gray-400">Pasión por los detalles, técnica precisa y rituales premium para que salgas impecable en cada visita.</p>
           </div>
-          <h2 className="text-white mb-4">Barberos Expertos</h2>
-          <p className="text-gray-400 max-w-2xl mx-auto">
-            Profesionales certificados con años de experiencia y pasión por su arte.
-          </p>
+          <button
+            onClick={scrollToBooking}
+            className="inline-flex items-center gap-2 bg-gold text-dark px-6 py-3 rounded-xl font-semibold shadow-lg hover:bg-gold/90 transition"
+          >
+            <CalendarDays className="w-5 h-5" />
+            Ver disponibilidad
+          </button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {barbers.map((barber) => (
             <div
               key={barber.id}
-              className="bg-gray-dark rounded-lg overflow-hidden border border-gray-light/20 hover:border-gold/30 transition-all duration-300 group flex flex-col"
+              className="bg-gray-dark/80 backdrop-blur rounded-xl overflow-hidden border border-gray-light/15 hover:border-gold/30 shadow-lg hover:shadow-gold/20 transition-all duration-300 group flex flex-col"
             >
               {/* Image */}
               <div className="relative h-80 overflow-hidden flex-shrink-0">
@@ -78,14 +84,14 @@ export function Barbers() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 mb-6 text-gray-400">
+                <div className="flex items-center gap-2 mb-6 text-gray-300 text-sm">
                   <span className="w-4 h-4 text-sm">🏆</span>
                   <span>{barber.experience} de experiencia</span>
                 </div>
 
                 <button 
                   onClick={scrollToBooking}
-                  className="w-full bg-gold/10 text-gold px-6 py-3 rounded border border-gold/30 hover:bg-gold hover:text-dark transition-all duration-300 mt-auto"
+                  className="w-full bg-gold/10 text-gold px-6 py-3 rounded-lg border border-gold/30 hover:bg-gold hover:text-dark transition-all duration-300 mt-auto"
                 >
                   Ver disponibilidad
                 </button>
