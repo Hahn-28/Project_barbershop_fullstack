@@ -27,7 +27,7 @@ export function PersonalCalendar({ bookings, title = "Mi Calendario" }: Personal
           headerToolbar={{
             left: 'prev,next today',
             center: 'title',
-            right: 'timeGridWeek,dayGridMonth'
+            right: 'timeGridWeek'
           }}
           locale="es"
           firstDay={1}

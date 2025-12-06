@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { api } from "@/lib/api";
 import { Toaster } from "@/components/ui/sonner";
 import { Scissors, User, Clock, Check } from 'lucide-react';
@@ -34,7 +34,7 @@ export function BookingModule({ onBookingComplete }: BookingModuleProps) {
   };
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [myBookings, setMyBookings] = useState<EventInput[]>([]);
+  const [myBookings, setMyBookings] = useState<Booking[]>([]);
   const [workerBookingsMap, setWorkerBookingsMap] = useState<Map<number, EventInput[]>>(new Map());
   const clientId = getUserIdFromToken();
 
@@ -71,38 +71,11 @@ export function BookingModule({ onBookingComplete }: BookingModuleProps) {
       try {
         const bookings = await api.myBookings() as Booking[];
         console.log("📅 Reservas cargadas del cliente:", bookings);
-        
-        const events: EventInput[] = bookings
-          .filter(b => b.status !== 'CANCELLED') // Filtrar canceladas
-          .map(b => {
-            // Usar la fecha tal como viene del backend
-            const bookingDate = typeof b.date === 'string' ? b.date : b.date.toISOString();
-            const startDate = new Date(bookingDate);
-            const endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
-            
-            console.log(`Reserva #${b.id}: date=${b.date}, using=${bookingDate}`);
-            
-            return {
-              id: String(b.id),
-              title: b.service?.name || 'Mi Reserva',
-              start: bookingDate,
-              end: endDate.toISOString(),
-              allDay: false,
-              backgroundColor: b.status === 'CONFIRMED' ? 'rgba(34, 197, 94, 0.8)' : 'rgba(212, 175, 55, 0.8)',
-              borderColor: b.status === 'CONFIRMED' ? 'rgb(34, 197, 94)' : '#D4AF37',
-              extendedProps: {
-                status: b.status,
-                workerId: b.workerId,
-                userId: b.userId,
-                isMyBooking: true,
-              }
-            };
-          });
-        
-        console.log("📅 Eventos del calendario generados:", events);
-        setMyBookings(events);
-      } catch (err) {
-        console.error("Error loading my bookings:", err);
+        setMyBookings(bookings.filter(b => b.status !== 'CANCELLED'));
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : "No se pudieron cargar las reservas";
+        console.error(message);
+        setMyBookings([]);
       }
     })();
   }, []);
@@ -154,13 +127,105 @@ export function BookingModule({ onBookingComplete }: BookingModuleProps) {
     })();
   }, [selectedWorkerId, workerBookingsMap]);
 
-  // Combinar reservas del cliente y del trabajador seleccionado
-  const relevantBookings = [
-    ...myBookings,
-    ...(selectedWorkerId && workerBookingsMap.has(selectedWorkerId) 
-      ? workerBookingsMap.get(selectedWorkerId)! 
-      : [])
-  ];
+  // Combinar reservas del cliente y trabajador con colores según quién está ocupado
+  const relevantBookings = useMemo(() => {
+    const events: EventInput[] = [];
+    const conflictTimes = new Set<string>(); // Para rastrear horarios con conflicto
+    
+    // Primero, detectar todos los conflictos
+    if (selectedWorkerId && workerBookingsMap.has(selectedWorkerId)) {
+      const workerEvents = workerBookingsMap.get(selectedWorkerId)! || [];
+      
+      workerEvents.forEach(wEvent => {
+        if (!wEvent.start) return;
+        
+        const bookingStart = new Date(wEvent.start as string);
+        const bookingEnd = wEvent.end ? new Date(wEvent.end as string) : new Date(bookingStart.getTime() + 60 * 60 * 1000);
+        
+        const hasClientBooking = myBookings.some(b => {
+          const clientStart = new Date(typeof b.date === 'string' ? b.date : b.date.toISOString());
+          const clientEnd = new Date(clientStart.getTime() + 60 * 60 * 1000);
+          
+          return clientStart < bookingEnd && clientEnd > bookingStart;
+        });
+        
+        if (hasClientBooking) {
+          conflictTimes.add(`${bookingStart.getTime()}`);
+        }
+      });
+    }
+    
+    // Convertir bookings del cliente a eventos amarillos (solo si no hay conflicto)
+    myBookings.forEach(b => {
+      const bookingDate = typeof b.date === 'string' ? b.date : b.date.toISOString();
+      const startDate = new Date(bookingDate);
+      const endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
+      
+      if (!conflictTimes.has(`${startDate.getTime()}`)) {
+        events.push({
+          id: `client-${b.id}`,
+          title: 'Ocupado (Cliente)',
+          start: bookingDate,
+          end: endDate.toISOString(),
+          allDay: false,
+          backgroundColor: 'rgba(212, 175, 55, 0.8)', // Amarillo - Cliente
+          borderColor: '#D4AF37',
+          extendedProps: {
+            type: 'client',
+            bookingId: b.id,
+          }
+        });
+      }
+    });
+    
+    // Convertir bookings del trabajador a eventos grises o rojos
+    if (selectedWorkerId && workerBookingsMap.has(selectedWorkerId)) {
+      const workerEvents = workerBookingsMap.get(selectedWorkerId)! || [];
+      
+      workerEvents.forEach(wEvent => {
+        if (!wEvent.start) return;
+        
+        const bookingStart = new Date(wEvent.start as string);
+        const bookingEnd = wEvent.end ? new Date(wEvent.end as string) : new Date(bookingStart.getTime() + 60 * 60 * 1000);
+        
+        const hasClientBooking = myBookings.some(b => {
+          const clientStart = new Date(typeof b.date === 'string' ? b.date : b.date.toISOString());
+          const clientEnd = new Date(clientStart.getTime() + 60 * 60 * 1000);
+          
+          return clientStart < bookingEnd && clientEnd > bookingStart;
+        });
+        
+        if (hasClientBooking) {
+          // Ambos ocupados - Rojo
+          events.push({
+            ...wEvent,
+            id: `both-${wEvent.id}`,
+            title: 'Ocupado (Ambos)',
+            backgroundColor: 'rgba(239, 68, 68, 0.8)', // Rojo
+            borderColor: 'rgb(239, 68, 68)',
+            extendedProps: {
+              type: 'both',
+              ...wEvent.extendedProps
+            }
+          });
+        } else {
+          // Solo trabajador - Gris
+          events.push({
+            ...wEvent,
+            title: 'Ocupado (Trabajador)',
+            backgroundColor: 'rgba(107, 114, 128, 0.8)', // Gris
+            borderColor: 'rgb(107, 114, 128)',
+            extendedProps: {
+              type: 'worker',
+              ...wEvent.extendedProps
+            }
+          });
+        }
+      });
+    }
+    
+    return events;
+  }, [myBookings, selectedWorkerId, workerBookingsMap]);
 
   const handleNext = () => {
     if (step < totalSteps) setStep(step + 1);

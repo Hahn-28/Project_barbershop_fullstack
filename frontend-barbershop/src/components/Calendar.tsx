@@ -33,22 +33,6 @@ export function Calendar({ onSlotSelect, selectedDate, selectedTime, bookings = 
       
       // Verificar si hay superposición
       if (slotStart < bookingEnd && slotEnd > bookingStart) {
-        const isWorkerBooking = booking.extendedProps?.workerId === workerId;
-        const isClientBooking = booking.extendedProps?.userId === clientId;
-        
-        if (isWorkerBooking) {
-          return { 
-            occupied: true, 
-            reason: `El trabajador ya tiene una reserva en este horario: ${booking.title || 'Reserva existente'}`
-          };
-        }
-        if (isClientBooking) {
-          return { 
-            occupied: true, 
-            reason: `Ya tienes una reserva en este horario: ${booking.title || 'Reserva existente'}`
-          };
-        }
-        // Cualquier otra reserva también bloquea el slot
         return { 
           occupied: true, 
           reason: `Este horario no está disponible`
@@ -122,7 +106,7 @@ export function Calendar({ onSlotSelect, selectedDate, selectedTime, bookings = 
         headerToolbar={{
           left: 'prev,next today',
           center: 'title',
-          right: 'timeGridWeek,timeGridDay'
+          right: 'timeGridWeek'
         }}
         locale="es"
         firstDay={1}
@@ -147,51 +131,58 @@ export function Calendar({ onSlotSelect, selectedDate, selectedTime, bookings = 
         }}
         selectAllow={(range) => {
           const duration = range.end.getTime() - range.start.getTime();
-          return duration === 60 * 60 * 1000;
+          if (duration !== 60 * 60 * 1000) return false;
+          
+          // Verificar si el slot está ocupado
+          const year = range.start.getFullYear();
+          const month = String(range.start.getMonth() + 1).padStart(2, '0');
+          const day = String(range.start.getDate()).padStart(2, '0');
+          const hours = String(range.start.getHours()).padStart(2, '0');
+          const minutes = String(range.start.getMinutes()).padStart(2, '0');
+          
+          const datePart = `${year}-${month}-${day}`;
+          const timePart = `${hours}:${minutes}`;
+          
+          const { occupied } = isSlotOccupied(datePart, timePart);
+          return !occupied; // Solo permitir si NO está ocupado
         }}
         eventClassNames={(arg) => {
           if (arg.event.id === 'selected-slot') return [];
-          const status = arg.event.extendedProps?.status;
-          if (status === 'CONFIRMED') return ['event-confirmed'];
-          if (status === 'PENDING') return ['event-pending'];
-          if (status === 'CANCELLED') return ['event-cancelled'];
           return ['event-occupied'];
         }}
         eventContent={(arg) => {
           if (arg.event.id === 'selected-slot') return null;
           
-          const status = arg.event.extendedProps?.status;
-          const serviceName = arg.event.title;
+          const type = arg.event.extendedProps?.type;
+          let label = 'Ocupado';
+          
+          if (type === 'client') label = 'Ocupado (Cliente)';
+          else if (type === 'worker') label = 'Ocupado (Trabajador)';
+          else if (type === 'both') label = 'Ocupado (Ambos)';
           
           return (
             <div className="p-1 text-xs leading-tight">
-              <div className="font-semibold truncate">{serviceName}</div>
-              <div className="text-[10px] mt-1 opacity-75">
-                {status === 'CONFIRMED' && '✓ Confirmada'}
-                {status === 'PENDING' && '⏳ Pendiente'}
-                {status === 'CANCELLED' && '✗ Cancelada'}
-                {!status && '● Ocupado'}
-              </div>
+              <div className="font-semibold truncate text-white">{label}</div>
             </div>
           );
         }}
       />
       <div className="mt-4 flex flex-wrap gap-3 text-sm">
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-green-500"></div>
-          <span className="text-gray-300">Confirmada</span>
+          <div className="w-4 h-4 rounded" style={{background: 'rgba(34, 197, 94, 0.6)'}}></div>
+          <span className="text-gray-300">Mi Selección (Disponible)</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-gold"></div>
-          <span className="text-gray-300">Pendiente</span>
+          <div className="w-4 h-4 rounded" style={{background: 'rgba(212, 175, 55, 0.8)'}}></div>
+          <span className="text-gray-300">Ocupado (Cliente)</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-red-500"></div>
-          <span className="text-gray-300">Cancelada</span>
+          <div className="w-4 h-4 rounded" style={{background: 'rgba(107, 114, 128, 0.8)'}}></div>
+          <span className="text-gray-300">Ocupado (Trabajador)</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-gray-500"></div>
-          <span className="text-gray-300">No disponible</span>
+          <div className="w-4 h-4 rounded" style={{background: 'rgba(239, 68, 68, 0.8)'}}></div>
+          <span className="text-gray-300">Ocupado (Ambos)</span>
         </div>
       </div>
       <style jsx global>{`
@@ -297,11 +288,13 @@ export function Calendar({ onSlotSelect, selectedDate, selectedTime, bookings = 
           box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
         }
         .calendar-container .selected-slot {
-          animation: pulse 2s infinite;
+          background-color: rgba(34, 197, 94, 0.3) !important;
+          border: 2px solid rgba(34, 197, 94, 0.9) !important;
+          box-shadow: 0 0 8px rgba(34, 197, 94, 0.5) !important;
         }
         @keyframes pulse {
-          0%, 100% { opacity: 0.3; }
-          50% { opacity: 0.5; }
+          0%, 100% { opacity: 0.4; }
+          50% { opacity: 0.7; }
         }
         .calendar-container .fc-highlight {
           background-color: rgba(212, 175, 55, 0.2) !important;
