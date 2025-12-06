@@ -1,11 +1,11 @@
-import { useState, useCallback } from 'react';
-import { api } from '@/lib/api';
 import { toast } from '@/components/ui/sonner';
+import { api } from '@/lib/api';
+import { useCallback, useState } from 'react';
 
 export type Booking = {
   id: number;
   serviceId: number;
-  date: string;
+  date: string | Date;
   status: string;
   notes?: string;
   service?: { name: string; price?: number };

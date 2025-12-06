@@ -10,10 +10,7 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  turbopack: {
-    // Fija el root al directorio del frontend para evitar warnings
-    root: ".",
-  },
+  output: 'standalone',
 };
 
 export default nextConfig;

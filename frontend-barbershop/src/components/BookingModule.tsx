@@ -1,11 +1,11 @@
 "use client";
-import { useEffect, useState, useMemo } from 'react';
-import { api } from "@/lib/api";
 import { Toaster } from "@/components/ui/sonner";
-import { Scissors, User, Clock, Check } from 'lucide-react';
-import { Calendar } from './Calendar';
+import { api } from "@/lib/api";
 import { getUserIdFromToken } from '@/lib/auth';
 import type { EventInput } from '@fullcalendar/core';
+import { Check, Clock, Scissors, User } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Calendar } from './Calendar';
 
 interface BookingModuleProps {
   readonly onBookingComplete?: () => void;
@@ -26,7 +26,7 @@ export function BookingModule({ onBookingComplete }: BookingModuleProps) {
   const [workers, setWorkers] = useState<Worker[]>([]);
   type Booking = { 
     id: number; 
-    date: string; 
+    date: string | Date; 
     status: string; 
     workerId: number; 
     userId: number; 
