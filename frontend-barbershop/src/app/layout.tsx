@@ -13,9 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  ttitle: "Barbershop Premium - Cortes y Rituales de Lujo",
-  description: "Barbershop premium con barberos profesionales. Disfruta de cortes, afeitados y tratamientos capilares personalizados con productos de alta calidad.",
-  keywords: ["barbershop", "barbería", "cortes de cabello", "afeitado", "barberos profesionales", "servicios premium"],
+  title: "Barbershop Premium - Cortes y Rituales de Lujo",
+  description: "Barbershop premium con barberos profesionales. Disfruta de cortes, afeitados y tratamientos capilares personalizados con productos de alta calidad."
 };
 
 export default function RootLayout({
