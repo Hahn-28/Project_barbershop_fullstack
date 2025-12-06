@@ -53,13 +53,28 @@ export function useBookings() {
   const cancelBooking = useCallback(async (id: number) => {
     try {
       await api.updateBookingStatus(id, "CANCELLED");
-      toast.success("Reserva cancelada");
+      toast.success("Reserva cancelada exitosamente");
       await loadBookings();
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "No se pudo cancelar la reserva";
+      let message = "No se pudo cancelar la reserva";
+      
+      if (err instanceof Error) {
+        if (err.message.includes('Not authorized')) {
+          message = "No tienes autorización para cancelar esta reserva. Solo puedes cancelar tus propias reservas.";
+        } else if (err.message.includes('403')) {
+          message = "No tienes permisos para cancelar esta reserva.";
+        } else if (err.message.includes('404')) {
+          message = "La reserva no existe o ya fue eliminada.";
+        } else if (err.message.includes('400')) {
+          message = "Esta reserva no puede ser cancelada.";
+        } else {
+          message = err.message;
+        }
+      }
+      
       console.error("Error cancelling booking:", err);
       toast.error(message);
-      throw err;
+      // No re-lanzar el error para evitar que se propague a la consola
     }
   }, [loadBookings]);
 

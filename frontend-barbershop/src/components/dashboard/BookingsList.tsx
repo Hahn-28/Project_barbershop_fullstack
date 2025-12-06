@@ -68,9 +68,9 @@ export function BookingsList({
       )}
 
       {!loading && filteredBookings.length > 0 && (
-        <div className="flex flex-col gap-4">
+        <div className="h-[calc(100%-80px)] overflow-y-auto pr-2 space-y-4 scrollbar-thin scrollbar-thumb-gold/30 scrollbar-track-gray-dark/20">
           {filteredBookings.map((b) => (
-            <Card key={b.id} className="p-4 bg-gray-dark border border-gray-light/20">
+            <Card key={b.id} className="p-4 bg-gray-dark border border-gray-light/20 flex-shrink-0">
               <div className="space-y-2">
                 <div>
                   <h4 className="text-white text-sm font-semibold mb-1">{b.service?.name || `Servicio #${b.serviceId}`}</h4>

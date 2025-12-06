@@ -50,97 +50,107 @@ export function ClientDashboard({ onLogout }: ClientDashboardProps) {
   return (
     <>
       <Toaster />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4 bg-gradient-to-r from-dark via-gray-900 to-dark/90 border border-gold/30 rounded-lg p-4 shadow-gold/10">
-          <div>
-            <h2 className="text-gold text-2xl font-extrabold mb-1 drop-shadow">Panel de Cliente</h2>
-            <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-4">
-              <span className="text-white text-base font-semibold truncate max-w-[140px]">{userName}</span>
-              <span className="text-xs text-gray-300 italic bg-gold/10 px-2 py-1 rounded">{userRole}</span>
+      <div className="min-h-screen bg-gradient-to-br from-dark via-gray-900 to-dark">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-gray-dark/95 via-gray-900/95 to-gray-dark/95 backdrop-blur-xl border-b border-gold/20 sticky top-0 z-50 shadow-2xl">
+          <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-5">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div className="space-y-1">
+                <h1 className="text-gold text-3xl font-bold drop-shadow-lg">Panel de Cliente</h1>
+                <div className="flex items-center gap-3">
+                  <span className="text-white text-sm font-medium truncate max-w-[200px]">{userName}</span>
+                  <span className="text-xs text-gold bg-gold/10 px-3 py-1 rounded-full border border-gold/30">{userRole}</span>
+                </div>
+              </div>
+              <Button onClick={onLogout} className="bg-red-600/90 hover:bg-red-700 text-white font-semibold px-6 py-2.5 rounded-xl border border-red-500/30 shadow-lg hover:shadow-red-500/20 transition-all">
+                Cerrar sesión
+              </Button>
             </div>
           </div>
-          <Button onClick={onLogout} className="bg-red-600 hover:bg-red-700 text-white font-bold px-6 py-2 rounded-lg border-2 border-red-400/60 shadow-lg transition-all">
-            Cerrar sesión
-          </Button>
         </div>
 
-        <div className="flex gap-6 border-b border-gray-light/20 mb-6">
-          <button
-            onClick={() => setActiveView("bookings")}
-            className={`py-3 px-2 border-b-2 ${
-              activeView === "bookings"
-                ? "border-gold text-gold"
-                : "border-transparent text-gray-400 hover:text-white"
-            }`}
-          >
-            Mis Reservas
-          </button>
-          <button
-            onClick={() => setActiveView("new")}
-            className={`py-3 px-2 border-b-2 ${
-              activeView === "new"
-                ? "border-gold text-gold"
-                : "border-transparent text-gray-400 hover:text-white"
-            }`}
-          >
-            Nueva Reserva
-          </button>
-        </div>
+        {/* Main Content */}
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex gap-2 border-b border-gray-light/15 mb-8">
+            <button
+              onClick={() => setActiveView("bookings")}
+              className={`py-3 px-6 font-semibold border-b-2 transition-all rounded-t-lg ${
+                activeView === "bookings"
+                  ? "border-gold text-gold bg-gold/5"
+                  : "border-transparent text-gray-400 hover:text-white hover:bg-white/5"
+              }`}
+            >
+              Mis Reservas
+            </button>
+            <button
+              onClick={() => setActiveView("new")}
+              className={`py-3 px-6 font-semibold border-b-2 transition-all rounded-t-lg ${
+                activeView === "new"
+                  ? "border-gold text-gold bg-gold/5"
+                  : "border-transparent text-gray-400 hover:text-white hover:bg-white/5"
+              }`}
+            >
+              Nueva Reserva
+            </button>
+          </div>
 
-        {activeView === "bookings" ? (
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-            {/* Columna izquierda: Contenido principal (tarjetas) */}
-            <div className="lg:col-span-1 order-2 lg:order-1">
-              <div>
-                <div className="flex flex-col gap-3 mb-4">
-                  <h2 className="text-white text-lg font-semibold">Mis Reservas</h2>
-                  <div className="flex flex-col gap-2">
-                    <select
-                      value={statusFilter}
-                      onChange={(e) => setStatusFilter(e.target.value)}
-                      className="bg-gray-dark border border-gray-light/30 text-white px-3 py-2 rounded text-sm"
-                    >
-                      <option value="ALL">Todos</option>
-                      <option value="PENDING">Pendiente</option>
-                      <option value="CONFIRMED">Confirmada</option>
-                      <option value="CANCELLED">Cancelada</option>
-                    </select>
-                    <Button onClick={loadBookings} className="bg-gold text-dark hover:bg-gold/90 w-full">
-                      Actualizar
-                    </Button>
+          {activeView === "bookings" ? (
+            <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-6 items-start">
+              {/* Columna izquierda: Contenido principal (tarjetas) */}
+              <div className="order-2 lg:order-1 h-[700px]">
+                <div className="bg-gray-dark/60 backdrop-blur-sm border border-gray-light/10 rounded-2xl p-4 shadow-xl h-full flex flex-col">
+                  <div className="space-y-3 mb-4 flex-shrink-0">
+                    <h3 className="text-white text-base font-bold">Mis Reservas</h3>
+                    <div className="space-y-2">
+                      <select
+                        value={statusFilter}
+                        onChange={(e) => setStatusFilter(e.target.value)}
+                        className="bg-gray-medium/80 backdrop-blur border border-gray-light/20 text-white px-3 py-2 rounded-lg text-sm w-full focus:ring-2 focus:ring-gold/50 transition"
+                      >
+                        <option value="ALL">Todos</option>
+                        <option value="PENDING">Pendiente</option>
+                        <option value="CONFIRMED">Confirmada</option>
+                        <option value="CANCELLED">Cancelada</option>
+                      </select>
+                      <Button onClick={loadBookings} className="bg-gold text-dark hover:bg-gold/90 w-full rounded-lg shadow-lg hover:shadow-gold/30 transition-all py-2 text-sm">
+                        Actualizar
+                      </Button>
+                    </div>
                   </div>
-                </div>
 
-                <BookingsList
-                  bookings={bookings}
-                  loading={loading}
-                  error={error}
-                  statusFilter={statusFilter}
-                  onRefresh={loadBookings}
-                  onCancel={cancelBooking}
-                  onNewBooking={() => setActiveView("new")}
-                />
+                  <BookingsList
+                    bookings={bookings}
+                    loading={loading}
+                    error={error}
+                    statusFilter={statusFilter}
+                    onRefresh={loadBookings}
+                    onCancel={cancelBooking}
+                    onNewBooking={() => setActiveView("new")}
+                  />
+                </div>
+              </div>
+
+              {/* Columna derecha: Calendario personal */}
+              <div className="order-1 lg:order-2 h-[700px]">
+                <div className="bg-gray-dark/60 backdrop-blur-sm border border-gray-light/10 rounded-2xl p-6 shadow-xl h-full">
+                  <PersonalCalendar 
+                    bookings={calendarEvents} 
+                    title="Mis Citas"
+                  />
+                </div>
               </div>
             </div>
-
-            {/* Columna derecha: Calendario personal */}
-            <div className="lg:col-span-4 order-1 lg:order-2">
-              <PersonalCalendar 
-                bookings={calendarEvents} 
-                title="Mis Citas"
+          ) : (
+            <div className="bg-gray-dark/60 backdrop-blur-sm border border-gray-light/10 rounded-2xl p-8 shadow-xl">
+              <BookingModule
+                onBookingComplete={() => {
+                  setActiveView("bookings");
+                  loadBookings();
+                }}
               />
             </div>
-          </div>
-        ) : (
-          <div>
-            <BookingModule
-              onBookingComplete={() => {
-                setActiveView("bookings");
-                loadBookings();
-              }}
-            />
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </>
   );

@@ -68,19 +68,19 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
   return (
     <>
       <Toaster />
-      <div className="min-h-screen bg-dark">
+      <div className="min-h-screen bg-gradient-to-br from-dark via-gray-900 to-dark">
         {/* Header */}
-        <div className="bg-gradient-to-r from-dark via-gray-900 to-dark/90 border-b border-gold/30 sticky top-0 z-40">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
+        <div className="bg-gradient-to-r from-gray-dark/95 via-gray-900/95 to-gray-dark/95 backdrop-blur-xl border-b border-gold/20 sticky top-0 z-50 shadow-2xl">
+          <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-5">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-              <div>
-                <h2 className="text-gold text-3xl font-extrabold drop-shadow">Panel de Administración</h2>
-                <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4 mt-1">
-                  <span className="text-white text-base font-semibold truncate">{userName}</span>
-                  <span className="text-xs text-gray-300 italic bg-gold/10 px-2 py-1 rounded w-fit">{userRole}</span>
+              <div className="space-y-1">
+                <h1 className="text-gold text-3xl font-bold drop-shadow-lg">Panel de Administración</h1>
+                <div className="flex items-center gap-3">
+                  <span className="text-white text-sm font-medium truncate max-w-[200px]">{userName}</span>
+                  <span className="text-xs text-gold bg-gold/10 px-3 py-1 rounded-full border border-gold/30">{userRole}</span>
                 </div>
               </div>
-              <Button onClick={onLogout} className="bg-red-600 hover:bg-red-700 text-white font-bold px-6 py-2 rounded-lg border-2 border-red-400/60 shadow-lg transition-all w-full md:w-auto">
+              <Button onClick={onLogout} className="bg-red-600/90 hover:bg-red-700 text-white font-semibold px-6 py-2.5 rounded-xl border border-red-500/30 shadow-lg hover:shadow-red-500/20 transition-all w-full md:w-auto">
                 Cerrar sesión
               </Button>
             </div>
@@ -88,95 +88,103 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
         </div>
 
         {/* Main Content */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            <div className="bg-gray-dark border border-gold/30 rounded-lg p-4 shadow-lg">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div className="bg-gray-dark/60 backdrop-blur-sm border border-gold/20 rounded-2xl p-6 shadow-xl hover:shadow-gold/20 transition-all">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-400 text-sm">Total Usuarios</p>
+                  <p className="text-gray-400 text-sm mb-1">Total Usuarios</p>
                   <p className="text-gold text-3xl font-bold">{totalUsers}</p>
                 </div>
-                <Users className="w-8 h-8 text-gold/50" />
+                <div className="w-14 h-14 bg-gold/10 rounded-2xl flex items-center justify-center">
+                  <Users className="w-7 h-7 text-gold" />
+                </div>
               </div>
             </div>
-            <div className="bg-gray-dark border border-blue-700/30 rounded-lg p-4 shadow-lg">
+            <div className="bg-gray-dark/60 backdrop-blur-sm border border-blue-500/20 rounded-2xl p-6 shadow-xl hover:shadow-blue-500/20 transition-all">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-400 text-sm">Trabajadores</p>
+                  <p className="text-gray-400 text-sm mb-1">Trabajadores</p>
                   <p className="text-blue-400 text-3xl font-bold">{workerCount}</p>
                 </div>
-                <div className="w-8 h-8 bg-blue-700/30 rounded-full" />
+                <div className="w-14 h-14 bg-blue-500/10 rounded-2xl flex items-center justify-center">
+                  <Wrench className="w-7 h-7 text-blue-400" />
+                </div>
               </div>
             </div>
-            <div className="bg-gray-dark border border-green-700/30 rounded-lg p-4 shadow-lg">
+            <div className="bg-gray-dark/60 backdrop-blur-sm border border-green-500/20 rounded-2xl p-6 shadow-xl hover:shadow-green-500/20 transition-all">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-400 text-sm">Clientes</p>
+                  <p className="text-gray-400 text-sm mb-1">Clientes</p>
                   <p className="text-green-400 text-3xl font-bold">{clientCount}</p>
                 </div>
-                <div className="w-8 h-8 bg-green-700/30 rounded-full" />
+                <div className="w-14 h-14 bg-green-500/10 rounded-2xl flex items-center justify-center">
+                  <Users className="w-7 h-7 text-green-400" />
+                </div>
               </div>
             </div>
-            <div className="bg-gray-dark border border-gold/30 rounded-lg p-4 shadow-lg">
+            <div className="bg-gray-dark/60 backdrop-blur-sm border border-gold/20 rounded-2xl p-6 shadow-xl hover:shadow-gold/20 transition-all">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-400 text-sm">Reservas</p>
+                  <p className="text-gray-400 text-sm mb-1">Reservas</p>
                   <p className="text-gold text-3xl font-bold">{totalBookings}</p>
                 </div>
-                <Calendar className="w-8 h-8 text-gold/50" />
+                <div className="w-14 h-14 bg-gold/10 rounded-2xl flex items-center justify-center">
+                  <Calendar className="w-7 h-7 text-gold" />
+                </div>
               </div>
             </div>
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-2 border-b border-gray-light/20 mb-6 overflow-x-auto">
+          <div className="flex gap-2 border-b border-gray-light/15 mb-8 overflow-x-auto">
             <button
               onClick={() => setActiveTab("dashboard")}
-              className={`py-3 px-4 font-semibold border-b-2 transition-colors whitespace-nowrap ${
+              className={`py-3 px-6 font-semibold border-b-2 transition-all whitespace-nowrap rounded-t-lg ${
                 activeTab === "dashboard"
-                  ? "border-gold text-gold"
-                  : "border-transparent text-gray-400 hover:text-white"
+                  ? "border-gold text-gold bg-gold/5"
+                  : "border-transparent text-gray-400 hover:text-white hover:bg-white/5"
               }`}
             >
               Dashboard
             </button>
             <button
               onClick={() => setActiveTab("clientes")}
-              className={`py-3 px-4 font-semibold border-b-2 transition-colors whitespace-nowrap ${
+              className={`py-3 px-6 font-semibold border-b-2 transition-all whitespace-nowrap rounded-t-lg ${
                 activeTab === "clientes"
-                  ? "border-gold text-gold"
-                  : "border-transparent text-gray-400 hover:text-white"
+                  ? "border-gold text-gold bg-gold/5"
+                  : "border-transparent text-gray-400 hover:text-white hover:bg-white/5"
               }`}
             >
               Clientes
             </button>
             <button
               onClick={() => setActiveTab("trabajadores")}
-              className={`py-3 px-4 font-semibold border-b-2 transition-colors whitespace-nowrap ${
+              className={`py-3 px-6 font-semibold border-b-2 transition-all whitespace-nowrap rounded-t-lg ${
                 activeTab === "trabajadores"
-                  ? "border-gold text-gold"
-                  : "border-transparent text-gray-400 hover:text-white"
+                  ? "border-gold text-gold bg-gold/5"
+                  : "border-transparent text-gray-400 hover:text-white hover:bg-white/5"
               }`}
             >
               Trabajadores
             </button>
             <button
               onClick={() => setActiveTab("servicios")}
-              className={`py-3 px-4 font-semibold border-b-2 transition-colors whitespace-nowrap ${
+              className={`py-3 px-6 font-semibold border-b-2 transition-all whitespace-nowrap rounded-t-lg ${
                 activeTab === "servicios"
-                  ? "border-gold text-gold"
-                  : "border-transparent text-gray-400 hover:text-white"
+                  ? "border-gold text-gold bg-gold/5"
+                  : "border-transparent text-gray-400 hover:text-white hover:bg-white/5"
               }`}
             >
               Servicios
             </button>
             <button
               onClick={() => setActiveTab("reservas")}
-              className={`py-3 px-4 font-semibold border-b-2 transition-colors whitespace-nowrap ${
+              className={`py-3 px-6 font-semibold border-b-2 transition-all whitespace-nowrap rounded-t-lg ${
                 activeTab === "reservas"
-                  ? "border-gold text-gold"
-                  : "border-transparent text-gray-400 hover:text-white"
+                  ? "border-gold text-gold bg-gold/5"
+                  : "border-transparent text-gray-400 hover:text-white hover:bg-white/5"
               }`}
             >
               Reservas
@@ -187,8 +195,8 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
           {activeTab === "dashboard" && (
             <div className="space-y-6">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="bg-gray-dark border border-gray-light/20 rounded-lg p-6">
-                  <h3 className="text-white text-lg font-bold mb-4">Resumen Usuarios</h3>
+                <div className="bg-gray-dark/60 backdrop-blur-sm border border-gray-light/10 rounded-2xl p-6 shadow-xl">
+                  <h3 className="text-white text-xl font-bold mb-6">Resumen Usuarios</h3>
                   <div className="space-y-3">
                     <div className="flex justify-between items-center pb-2 border-b border-gray-light/20">
                       <span className="text-gray-300">Administradores</span>
@@ -205,8 +213,8 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                   </div>
                 </div>
 
-                <div className="bg-gray-dark border border-gray-light/20 rounded-lg p-6">
-                  <h3 className="text-white text-lg font-bold mb-4">Resumen Reservas</h3>
+                <div className="bg-gray-dark/60 backdrop-blur-sm border border-gray-light/10 rounded-2xl p-6 shadow-xl">
+                  <h3 className="text-white text-xl font-bold mb-6">Resumen Reservas</h3>
                   <div className="space-y-3">
                     <div className="flex justify-between items-center pb-2 border-b border-gray-light/20">
                       <span className="text-gray-300">Pendientes</span>

@@ -50,42 +50,51 @@ export function WorkerDashboard({ onLogout }: WorkerDashboardProps) {
   return (
     <>
       <Toaster />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4 bg-gradient-to-r from-dark via-gray-900 to-dark/90 border border-gold/30 rounded-lg p-4 shadow-gold/10">
-          <div>
-            <h2 className="text-gold text-2xl font-extrabold mb-1 drop-shadow">Panel de Trabajador</h2>
-            <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-4">
-              <span className="text-white text-base font-semibold truncate max-w-[180px]">{userName}</span>
-              <span className="text-xs text-gray-300 italic bg-gold/10 px-2 py-1 rounded">{userRole}</span>
+      <div className="min-h-screen bg-gradient-to-br from-dark via-gray-900 to-dark">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-gray-dark/95 via-gray-900/95 to-gray-dark/95 backdrop-blur-xl border-b border-gold/20 sticky top-0 z-50 shadow-2xl">
+          <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-5">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div className="space-y-1">
+                <h1 className="text-gold text-3xl font-bold drop-shadow-lg">Panel de Trabajador</h1>
+                <div className="flex items-center gap-3">
+                  <span className="text-white text-sm font-medium truncate max-w-[200px]">{userName}</span>
+                  <span className="text-xs text-gold bg-gold/10 px-3 py-1 rounded-full border border-gold/30">{userRole}</span>
+                </div>
+              </div>
+              <Button onClick={onLogout} className="bg-red-600/90 hover:bg-red-700 text-white font-semibold px-6 py-2.5 rounded-xl border border-red-500/30 shadow-lg hover:shadow-red-500/20 transition-all">
+                Cerrar sesión
+              </Button>
             </div>
           </div>
-          <Button onClick={onLogout} className="bg-red-600 hover:bg-red-700 text-white font-bold px-6 py-2 rounded-lg border-2 border-red-400/60 shadow-lg transition-all">
-            Cerrar sesión
-          </Button>
         </div>
 
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex gap-3">
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="bg-gray-dark border border-gray-light/30 text-white px-3 py-2 rounded"
-            >
-              <option value="ALL">Todos</option>
-              <option value="PENDING">Pendiente</option>
-              <option value="CONFIRMED">Confirmada</option>
-              <option value="CANCELLED">Cancelada</option>
-            </select>
-            <Button onClick={loadWorkerBookings} className="bg-gold text-dark hover:bg-gold/90">
-              <RefreshCw className="w-4 h-4 mr-2" /> Actualizar
-            </Button>
+        {/* Main Content */}
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+            <h2 className="text-white text-2xl font-bold">Mis Reservas Asignadas</h2>
+            <div className="flex gap-3 w-full sm:w-auto">
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="bg-gray-medium/80 backdrop-blur border border-gray-light/20 text-white px-4 py-2.5 rounded-lg text-sm focus:ring-2 focus:ring-gold/50 transition flex-1 sm:flex-none"
+              >
+                <option value="ALL">Todos</option>
+                <option value="PENDING">Pendiente</option>
+                <option value="CONFIRMED">Confirmada</option>
+                <option value="CANCELLED">Cancelada</option>
+              </select>
+              <Button onClick={loadWorkerBookings} className="bg-gold text-dark hover:bg-gold/90 rounded-lg shadow-lg hover:shadow-gold/30 transition-all">
+                <RefreshCw className="w-4 h-4 mr-2" /> Actualizar
+              </Button>
+            </div>
           </div>
-        </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-          {/* Columna izquierda: Lista de reservas (tarjetas) */}
-          <div className="lg:col-span-1 order-2 lg:order-1">
-            {loading && (
+          <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-6 items-start">
+            {/* Columna izquierda: Lista de reservas (tarjetas) */}
+            <div className="order-2 lg:order-1 h-[700px]">
+              <div className="bg-gray-dark/60 backdrop-blur-sm border border-gray-light/10 rounded-2xl p-4 shadow-xl h-full flex flex-col">
+                {loading && (
               <div className="flex flex-col items-center justify-center py-12">
                 <Loader2 className="w-12 h-12 text-gold animate-spin mb-4" />
                 <p className="text-white text-sm">Cargando...</p>
@@ -112,7 +121,7 @@ export function WorkerDashboard({ onLogout }: WorkerDashboardProps) {
             )}
 
             {!loading && filtered.length > 0 && (
-              <div className="flex flex-col gap-4">
+              <div className="flex-1 overflow-y-auto pr-2 space-y-4 scrollbar-thin scrollbar-thumb-gold/30 scrollbar-track-gray-dark/20">
                 {filtered.map((b) => (
                   <Card key={b.id} className="p-4 bg-gray-dark border border-gray-light/20">
                     <div className="space-y-2">
@@ -155,14 +164,18 @@ export function WorkerDashboard({ onLogout }: WorkerDashboardProps) {
                 ))}
               </div>
             )}
-          </div>
+              </div>
+            </div>
 
-          {/* Columna derecha: Calendario personal */}
-          <div className="lg:col-span-4 order-1 lg:order-2">
-            <PersonalCalendar 
-              bookings={calendarEvents} 
-              title="Mis Reservas Asignadas"
-            />
+            {/* Columna derecha: Calendario personal */}
+            <div className="order-1 lg:order-2 h-[700px]">
+              <div className="bg-gray-dark/60 backdrop-blur-sm border border-gray-light/10 rounded-2xl p-6 shadow-xl h-full">
+                <PersonalCalendar 
+                  bookings={calendarEvents} 
+                  title="Mis Reservas Asignadas"
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>
