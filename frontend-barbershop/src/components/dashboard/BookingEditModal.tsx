@@ -9,8 +9,8 @@ interface Booking {
   date: string | Date;
   notes?: string;
   service?: { name: string; price?: number };
-  user?: { name: string; email: string };
-  worker?: { name: string; email: string };
+  user?: { id: number; name: string; email?: string; phone?: string };
+  worker?: { id: number; name: string; email?: string; phone?: string };
 }
 
 interface BookingEditModalProps {

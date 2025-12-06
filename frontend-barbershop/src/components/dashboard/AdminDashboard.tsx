@@ -10,7 +10,7 @@ import { useCreateUser } from "@/lib/hooks/useCreateUser";
 import { useUsers } from "@/lib/hooks/useUsers";
 import { useServices } from "@/lib/hooks/useServices";
 import { Toaster } from "@/components/ui/sonner";
-import { Users, Calendar, Plus, Wrench } from "lucide-react";
+import { Users, Calendar, Plus, Wrench, RefreshCw } from "lucide-react";
 import { PersonalCalendar } from "@/components/PersonalCalendar";
 import type { EventInput } from "@fullcalendar/core";
 import type { NewUser } from "@/lib/hooks/useCreateUser";
@@ -444,7 +444,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
       {/* Modal para editar reserva */}
       <BookingEditModal
         isOpen={selectedBookingId !== null}
-        booking={selectedBooking as any}
+        booking={selectedBooking || null}
         onClose={() => setSelectedBookingId(null)}
         onStatusChange={updateBookingStatus}
       />
