@@ -89,40 +89,48 @@ export function BookingModule({ onBookingComplete }: BookingModuleProps) {
 
     (async () => {
       try {
-        // Crear un mock de reservas del trabajador basado en las existentes
-        // En producción, necesitarías un endpoint como /bookings/worker/:id
-        const bookings = await api.myBookings() as Booking[];
+        // Usar el nuevo endpoint público para obtener reservas confirmadas del trabajador
+        const bookings = await api.workerConfirmedBookings(selectedWorkerId) as Array<{
+          id: number;
+          date: string;
+          time: string;
+          status: string;
+        }>;
         
-        // Filtrar solo las reservas de este trabajador
-        const workerEvents: EventInput[] = bookings
-          .filter(b => b.workerId === selectedWorkerId && b.status !== 'CANCELLED')
-          .map(b => {
-            // Usar la fecha tal como viene del backend
-            const bookingDate = typeof b.date === 'string' ? b.date : b.date.toISOString();
-            const startDate = new Date(bookingDate);
-            const endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
-            
-            return {
-              id: String(b.id) + '-worker',
-              title: 'Ocupado',
-              start: bookingDate,
-              end: endDate.toISOString(),
-              allDay: false,
-              backgroundColor: 'rgba(107, 114, 128, 0.7)',
-              borderColor: 'rgb(107, 114, 128)',
-              extendedProps: {
-                status: 'OCCUPIED',
-                workerId: b.workerId,
-                isWorkerBooking: true,
-              }
-            };
-          });
+        console.log("📅 Reservas confirmadas del trabajador", selectedWorkerId, ":", bookings);
+        
+        // Convertir a eventos del calendario
+        const workerEvents: EventInput[] = bookings.map(b => {
+          // Usar la fecha tal como viene del backend
+          const bookingDate = typeof b.date === 'string' ? b.date : b.date;
+          const startDate = new Date(bookingDate);
+          const endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
+          
+          return {
+            id: String(b.id) + '-worker',
+            title: 'Ocupado',
+            start: bookingDate,
+            end: endDate.toISOString(),
+            allDay: false,
+            backgroundColor: 'rgba(107, 114, 128, 0.7)',
+            borderColor: 'rgb(107, 114, 128)',
+            extendedProps: {
+              status: 'OCCUPIED',
+              workerId: selectedWorkerId,
+              isWorkerBooking: true,
+            }
+          };
+        });
         
         const newMap = new Map(workerBookingsMap);
         newMap.set(selectedWorkerId, workerEvents);
         setWorkerBookingsMap(newMap);
       } catch (err) {
         console.error("Error loading worker bookings:", err);
+        // Si hay error, establecer array vacío para este trabajador
+        const newMap = new Map(workerBookingsMap);
+        newMap.set(selectedWorkerId, []);
+        setWorkerBookingsMap(newMap);
       }
     })();
   }, [selectedWorkerId, workerBookingsMap]);

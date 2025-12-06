@@ -82,6 +82,7 @@ export const api = {
     http.post("/bookings", payload),
   myBookings: () => http.get<unknown[]>("/bookings/me"),
   workerBookings: () => http.get<unknown[]>("/bookings/worker"),
+  workerConfirmedBookings: (workerId: number) => http.get<unknown[]>(`/bookings/worker/${workerId}/confirmed`),
   allBookings: () => http.get<unknown[]>("/bookings"),
   updateBookingStatus: (id: number, status: string) => http.put(`/bookings/${id}/status`, { status }),
 

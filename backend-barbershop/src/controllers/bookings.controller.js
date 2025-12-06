@@ -128,6 +128,48 @@ export const getAllBookings = async (req, res) => {
   }
 };
 
+// Endpoint público para obtener reservas confirmadas de un trabajador específico
+export const getWorkerConfirmedBookings = async (req, res) => {
+  try {
+    const { workerId } = req.params;
+
+    if (!workerId) {
+      return errorResponse(res, "Worker ID is required", 400);
+    }
+
+    // Verificar que el trabajador existe
+    const worker = await prisma.user.findUnique({
+      where: { id: parseInt(workerId) },
+    });
+
+    if (!worker || worker.role !== "WORKER") {
+      return errorResponse(res, "Worker not found", 404);
+    }
+
+    // Obtener solo las reservas confirmadas y pendientes (no canceladas) del trabajador
+    const bookings = await prisma.booking.findMany({
+      where: {
+        workerId: parseInt(workerId),
+        status: {
+          in: ["CONFIRMED", "PENDING"],
+        },
+      },
+      select: {
+        id: true,
+        date: true,
+        time: true,
+        status: true,
+      },
+      orderBy: { date: "asc" },
+    });
+
+    return successResponse(res, bookings, "Worker confirmed bookings retrieved successfully");
+  } catch (error) {
+    console.error("getWorkerConfirmedBookings - Error:", error);
+    return errorResponse(res, "Failed to retrieve worker bookings", 500, error);
+  }
+};
+
 export const updateBookingStatus = async (req, res) => {
   try {
     const { id } = req.params;
