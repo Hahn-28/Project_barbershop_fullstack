@@ -66,11 +66,67 @@ export function useUsers() {
     }
   }, [users]);
 
+  const updateUser = useCallback(async (id: number, data: Record<string, unknown>) => {
+    try {
+      const updatedUser = await api.updateUser(id, data) as User;
+      setUsers(users.map(u => u.id === id ? updatedUser : u));
+      toast.success("Usuario actualizado correctamente");
+      return true;
+    } catch (err: unknown) {
+      const message = handleError(err);
+      console.error("Error updating user:", err);
+      toast.error(message);
+      return false;
+    }
+  }, [users]);
+
+  const deleteUser = useCallback(async (id: number) => {
+    try {
+      await api.deleteUser(id);
+      setUsers(users.filter(u => u.id !== id));
+      toast.success("Usuario eliminado correctamente");
+      return true;
+    } catch (err: unknown) {
+      const message = handleError(err);
+      console.error("Error deleting user:", err);
+      toast.error(message);
+      return false;
+    }
+  }, [users]);
+
+  const getUserById = useCallback(async (id: number) => {
+    try {
+      const user = await api.getUserById(id) as User;
+      return user;
+    } catch (err: unknown) {
+      const message = handleError(err);
+      console.error("Error getting user:", err);
+      toast.error(message);
+      return null;
+    }
+  }, []);
+
+  const getUserBookingHistory = useCallback(async (id: number) => {
+    try {
+      const bookings = await api.getUserBookingHistory(id);
+      return bookings;
+    } catch (err: unknown) {
+      const message = handleError(err);
+      console.error("Error getting user booking history:", err);
+      toast.error(message);
+      return [];
+    }
+  }, []);
+
   return {
     users,
     loading,
     error,
     loadUsers,
     updateUserStatus,
+    updateUser,
+    deleteUser,
+    getUserById,
+    getUserBookingHistory,
   };
 }

@@ -213,20 +213,18 @@ export function ServicesList({ services, loading, error, onRefresh, onCreate, on
           {services.map((service) => (
             <div
               key={service.id}
-              className="bg-gray-dark border border-gray-light/20 rounded-lg p-4 hover:border-gold/50 transition-colors"
+              className="bg-gray-dark border border-gray-light/20 rounded-xl p-4 hover:border-gold/50 transition-colors shadow-md hover:scale-[1.02] duration-200"
             >
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gold/20 flex items-center justify-center">
-                      <span className="text-gold font-bold text-sm">$</span>
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-white font-semibold">{service.name}</h3>
-                      {service.description && (
-                        <p className="text-xs text-gray-400">{service.description}</p>
-                      )}
-                    </div>
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <div className="flex items-center gap-4 flex-1 min-w-0">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-gold/30 to-gold/10 flex items-center justify-center shadow-lg">
+                    <span className="text-gold font-extrabold text-xl">$</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-white font-semibold truncate">{service.name}</h3>
+                    {service.description && (
+                      <p className="text-xs text-gray-400 truncate">{service.description}</p>
+                    )}
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
@@ -239,15 +237,17 @@ export function ServicesList({ services, loading, error, onRefresh, onCreate, on
                   <div className="flex gap-2">
                     <button
                       onClick={() => startEdit(service)}
-                      className="text-blue-400 hover:text-blue-300 transition-colors p-1"
+                      className="text-blue-400 hover:text-blue-300 transition-colors p-1 rounded-full border border-blue-400/30 hover:border-blue-400/60"
+                      title="Editar"
                     >
-                      <Edit2 className="w-4 h-4" />
+                      <Edit2 className="w-5 h-5" />
                     </button>
                     <button
                       onClick={() => handleDelete(service.id)}
-                      className="text-red-400 hover:text-red-300 transition-colors p-1"
+                      className="text-red-400 hover:text-red-300 transition-colors p-1 rounded-full border border-red-400/30 hover:border-red-400/60"
+                      title="Eliminar"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-5 h-5" />
                     </button>
                   </div>
                 </div>
@@ -306,7 +306,7 @@ export function ServicesList({ services, loading, error, onRefresh, onCreate, on
                     </div>
 
                     <div className="flex gap-2 pt-2">
-                      <Button type="submit" className="flex-1 bg-blue-600 text-white hover:bg-blue-700 font-bold">
+                      <Button type="submit" className="flex-1 bg-blue-600 text-white hover:bg-blue-700 font-bold rounded-lg shadow">
                         Guardar
                       </Button>
                       <Button
@@ -316,7 +316,7 @@ export function ServicesList({ services, loading, error, onRefresh, onCreate, on
                           setExpandedServiceId(null);
                           resetForm();
                         }}
-                        className="flex-1 bg-gray-700 hover:bg-gray-600 text-white"
+                        className="flex-1 bg-gray-700 hover:bg-gray-600 text-white rounded-lg shadow"
                       >
                         Cancelar
                       </Button>

@@ -50,3 +50,64 @@ export const deleteService = async (req, res) => {
     return errorResponse(res, "Failed to delete service", 500, error);
   }
 };
+
+// Admin: Obtener detalles de un servicio específico
+export const getServiceById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const service = await prisma.service.findUnique({
+      where: { id: parseInt(id) },
+      include: {
+        _count: {
+          select: { bookings: true },
+        },
+      },
+    });
+
+    if (!service) {
+      return errorResponse(res, "Service not found", 404);
+    }
+
+    return successResponse(res, service, "Service fetched successfully");
+  } catch (error) {
+    return errorResponse(res, "Failed to fetch service", 500, error);
+  }
+};
+
+// Admin: Obtener estadísticas de servicios
+export const getServiceStats = async (req, res) => {
+  try {
+    const services = await prisma.service.findMany({
+      include: {
+        _count: {
+          select: { bookings: true },
+        },
+      },
+    });
+
+    const totalServices = services.length;
+    const totalBookings = services.reduce((sum, s) => sum + s._count.bookings, 0);
+    const mostPopular = services.sort((a, b) => b._count.bookings - a._count.bookings)[0];
+
+    const stats = {
+      totalServices,
+      totalBookings,
+      mostPopular: mostPopular ? {
+        id: mostPopular.id,
+        name: mostPopular.name,
+        bookingsCount: mostPopular._count.bookings,
+      } : null,
+      services: services.map(s => ({
+        id: s.id,
+        name: s.name,
+        price: s.price,
+        bookingsCount: s._count.bookings,
+      })),
+    };
+
+    return successResponse(res, stats, "Service stats fetched successfully");
+  } catch (error) {
+    return errorResponse(res, "Failed to fetch service stats", 500, error);
+  }
+};

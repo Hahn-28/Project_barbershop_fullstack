@@ -100,10 +100,18 @@ export const api = {
   workerConfirmedBookings: (workerId: number) => http.get<unknown[]>(`/bookings/worker/${workerId}/confirmed`),
   allBookings: () => http.get<unknown[]>("/bookings"),
   updateBookingStatus: (id: number, status: string) => http.put(`/bookings/${id}/status`, { status }),
+  deleteBooking: (id: number) => http.del(`/bookings/${id}`),
+  updateBooking: (id: number, payload: Record<string, unknown>) => http.put(`/bookings/${id}`, payload),
+  getBookingStats: () => http.get("/bookings/stats"),
 
   // Users (admin)
   listUsers: () => http.get<unknown[]>("/users"),
   updateUserStatus: (id: number, isActive: boolean) => http.put(`/users/${id}/status`, { isActive }),
+  getUserById: (id: number) => http.get(`/users/${id}`),
+  updateUser: (id: number, payload: Record<string, unknown>) => http.put(`/users/${id}`, payload),
+  deleteUser: (id: number) => http.del(`/users/${id}`),
+  getSystemStats: () => http.get("/users/stats"),
+  getUserBookingHistory: (id: number) => http.get<unknown[]>(`/users/${id}/bookings`),
 
   // Profile
   getMyProfile: () => http.get("/users/me"),
@@ -111,6 +119,10 @@ export const api = {
 
   // Workers (client)
   listWorkers: () => http.get<unknown[]>("/users/workers"),
+
+  // Services (admin)
+  getServiceById: (id: number) => http.get(`/services/${id}`),
+  getServiceStats: () => http.get("/services/stats"),
 };
 
 export function saveToken(token: string) {
