@@ -61,8 +61,37 @@ export function Calendar({ onSlotSelect, selectedDate, selectedTime, bookings = 
   }, [selectedDate, selectedTime]);
 
   const events: EventInput[] = useMemo(
-    () => [...bookings, ...selectedSlotEvent],
-    [bookings, selectedSlotEvent]
+    () => {
+      // Mostrar todos los bookings normalmente
+      const baseEvents = bookings.map(event => {
+        // Si hay un slot seleccionado, marcar eventos que coinciden como ocultos
+        if (selectedDate && selectedTime && event.start) {
+          const [year, month, day] = selectedDate.split('-').map(Number);
+          const [hours, minutes] = selectedTime.split(':').map(Number);
+          const selectedDateTime = new Date(year, month - 1, day, hours, minutes, 0, 0);
+          const selectedStart = selectedDateTime.getTime();
+          const selectedEnd = selectedStart + 60 * 60 * 1000;
+          
+          const eventStart = new Date(event.start as string);
+          const eventStartTime = eventStart.getTime();
+          const eventEndTime = event.end 
+            ? new Date(event.end as string).getTime()
+            : eventStartTime + 60 * 60 * 1000;
+          
+          const hasOverlap = selectedStart < eventEndTime && selectedEnd > eventStartTime;
+          
+          // Si hay superposición, marcar para ocultar
+          if (hasOverlap) {
+            return { ...event, display: 'none' as const };
+          }
+        }
+        
+        return event;
+      });
+      
+      return [...baseEvents, ...selectedSlotEvent];
+    },
+    [bookings, selectedSlotEvent, selectedDate, selectedTime]
   );
 
   const handleSelect = (selection: DateSelectArg) => {
@@ -121,6 +150,13 @@ export function Calendar({ onSlotSelect, selectedDate, selectedTime, bookings = 
         nowIndicator={true}
         events={events}
         select={handleSelect}
+        eventClick={(info) => {
+          // Prevenir que se seleccione un evento ocupado
+          if (info.event.id !== 'selected-slot') {
+            info.jsEvent.preventDefault();
+            toast.error("No puedes seleccionar un horario ocupado");
+          }
+        }}
         validRange={{
           start: new Date().toISOString().split('T')[0]
         }}
@@ -291,6 +327,13 @@ export function Calendar({ onSlotSelect, selectedDate, selectedTime, bookings = 
           background-color: rgba(34, 197, 94, 0.3) !important;
           border: 2px solid rgba(34, 197, 94, 0.9) !important;
           box-shadow: 0 0 8px rgba(34, 197, 94, 0.5) !important;
+        }
+        .calendar-container .fc-event[style*="display: none"],
+        .calendar-container .fc-daygrid-event[style*="display: none"],
+        .calendar-container .fc-timegrid-event[style*="display: none"] {
+          display: none !important;
+          visibility: hidden !important;
+          pointer-events: none !important;
         }
         @keyframes pulse {
           0%, 100% { opacity: 0.4; }
