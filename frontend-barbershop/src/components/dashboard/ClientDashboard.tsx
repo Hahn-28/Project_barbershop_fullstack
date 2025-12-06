@@ -48,6 +48,88 @@ export function ClientDashboard({ onLogout }: ClientDashboardProps) {
     });
   }, [bookings]);
 
+  // Renderizar contenido basado en la vista activa
+  const renderContent = () => {
+    if (activeView === "bookings") {
+      return (
+        <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-6 items-start">
+          {/* Columna izquierda: Contenido principal (tarjetas) */}
+          <div className="order-2 lg:order-1 h-[700px]">
+            <div className="bg-gray-dark/60 backdrop-blur-sm border border-gray-light/10 rounded-2xl p-4 shadow-xl h-full flex flex-col">
+              <div className="space-y-3 mb-4 flex-shrink-0">
+                <h3 className="text-white text-base font-bold">Mis Reservas</h3>
+                <div className="space-y-2">
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="bg-gray-medium/80 backdrop-blur border border-gray-light/20 text-white px-3 py-2 rounded-lg text-sm w-full focus:ring-2 focus:ring-gold/50 transition"
+                  >
+                    <option value="ALL">Todos</option>
+                    <option value="PENDING">Pendiente</option>
+                    <option value="CONFIRMED">Confirmada</option>
+                    <option value="COMPLETE">Completada</option>
+                    <option value="CANCELLED">Cancelada</option>
+                  </select>
+                  <Button onClick={loadBookings} className="bg-gold text-dark hover:bg-gold/90 w-full rounded-lg shadow-lg hover:shadow-gold/30 transition-all py-2 text-sm">
+                    Actualizar
+                  </Button>
+                </div>
+              </div>
+
+              <BookingsList
+                bookings={bookings}
+                loading={loading}
+                error={error}
+                statusFilter={statusFilter}
+                onRefresh={loadBookings}
+                onCancel={cancelBooking}
+                onNewBooking={() => setActiveView("new")}
+                isClient={true}
+              />
+            </div>
+          </div>
+
+          {/* Columna derecha: Calendario personal */}
+          <div className="order-1 lg:order-2 h-[700px]">
+            <div className="bg-gray-dark/60 backdrop-blur-sm border border-gray-light/10 rounded-2xl p-6 shadow-xl h-full">
+              <PersonalCalendar 
+                bookings={calendarEvents} 
+                title="Mis Citas"
+              />
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (activeView === "profile") {
+      return (
+        <ProfileCard
+          onLogout={onLogout}
+          role={userRole || "CLIENT"}
+          bookingStats={{
+            confirmed: bookings.filter(b => b.status === "CONFIRMED").length,
+            pending: bookings.filter(b => b.status === "PENDING").length,
+            complete: bookings.filter(b => b.status === "COMPLETE").length,
+            cancelled: bookings.filter(b => b.status === "CANCELLED").length,
+            total: bookings.length,
+          }}
+        />
+      );
+    }
+
+    return (
+      <div className="bg-gray-dark/60 backdrop-blur-sm border border-gray-light/10 rounded-2xl p-8 shadow-xl">
+        <BookingModule
+          onBookingComplete={() => {
+            setActiveView("bookings");
+            loadBookings();
+          }}
+        />
+      </div>
+    );
+  };
+
   return (
     <>
       <Toaster />
@@ -121,6 +203,7 @@ export function ClientDashboard({ onLogout }: ClientDashboardProps) {
                         <option value="ALL">Todos</option>
                         <option value="PENDING">Pendiente</option>
                         <option value="CONFIRMED">Confirmada</option>
+                        <option value="COMPLETE">Completada</option>
                         <option value="CANCELLED">Cancelada</option>
                       </select>
                       <Button onClick={loadBookings} className="bg-gold text-dark hover:bg-gold/90 w-full rounded-lg shadow-lg hover:shadow-gold/30 transition-all py-2 text-sm">
@@ -159,6 +242,7 @@ export function ClientDashboard({ onLogout }: ClientDashboardProps) {
               bookingStats={{
                 confirmed: bookings.filter(b => b.status === "CONFIRMED").length,
                 pending: bookings.filter(b => b.status === "PENDING").length,
+                complete: bookings.filter(b => b.status === "COMPLETE").length,
                 cancelled: bookings.filter(b => b.status === "CANCELLED").length,
                 total: bookings.length,
               }}

@@ -8,6 +8,8 @@ export type Booking = {
   date: string | Date;
   status: string;
   notes?: string;
+  userId?: number;
+  workerId?: number;
   service?: { name: string; price?: number };
   user?: { id: number; name: string; email?: string; phone?: string };
   worker?: { id: number; name: string; email?: string; phone?: string };

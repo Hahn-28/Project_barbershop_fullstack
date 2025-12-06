@@ -83,6 +83,10 @@ export function useWorkerBookings() {
     updateBookingStatus(id, "CANCELLED", "Reserva rechazada");
   }, [updateBookingStatus]);
 
+  const completeBooking = useCallback((id: number) => {
+    updateBookingStatus(id, "COMPLETE", "Reserva completada");
+  }, [updateBookingStatus]);
+
   return {
     bookings,
     loading,
@@ -90,5 +94,6 @@ export function useWorkerBookings() {
     loadWorkerBookings,
     confirmBooking,
     cancelBooking,
+    completeBooking,
   };
 }

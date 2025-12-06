@@ -15,13 +15,21 @@ interface WorkerDashboardProps {
 }
 
 export function WorkerDashboard({ onLogout }: WorkerDashboardProps) {
-  const { bookings, loading, error, loadWorkerBookings, confirmBooking, cancelBooking } = useWorkerBookings();
+  const { bookings, loading, error, loadWorkerBookings, confirmBooking, cancelBooking, completeBooking } = useWorkerBookings();
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [activeView, setActiveView] = useState<"bookings" | "profile">("bookings");
 
   useEffect(() => {
     loadWorkerBookings();
   }, [loadWorkerBookings]);
+
+  // Función para verificar si una reserva puede ser completada
+  const canCompleteBooking = (bookingDate: string | Date) => {
+    const now = new Date();
+    const booking = new Date(bookingDate);
+    // Puede completar si ya pasó la hora de la reserva
+    return now >= booking;
+  };
 
   const filtered = bookings.filter(b => statusFilter === "ALL" ? true : b.status === statusFilter);
   const userName = getNameFromToken();
@@ -105,6 +113,7 @@ export function WorkerDashboard({ onLogout }: WorkerDashboardProps) {
               bookingStats={{
                 confirmed: bookings.filter(b => b.status === "CONFIRMED").length,
                 pending: bookings.filter(b => b.status === "PENDING").length,
+                complete: bookings.filter(b => b.status === "COMPLETE").length,
                 cancelled: bookings.filter(b => b.status === "CANCELLED").length,
                 total: bookings.length,
               }}
@@ -125,6 +134,7 @@ export function WorkerDashboard({ onLogout }: WorkerDashboardProps) {
                     <option value="ALL">Todos</option>
                     <option value="PENDING">Pendiente</option>
                     <option value="CONFIRMED">Confirmada</option>
+                    <option value="COMPLETE">Completada</option>
                     <option value="CANCELLED">Cancelada</option>
                   </select>
                   <Button onClick={loadWorkerBookings} className="bg-gold text-dark hover:bg-gold/90 rounded-lg shadow-lg hover:shadow-gold/30 transition-all">
@@ -196,7 +206,12 @@ export function WorkerDashboard({ onLogout }: WorkerDashboardProps) {
                             Confirmar
                           </Button>
                         )}
-                        {b.status !== "CANCELLED" && (
+                        {b.status === "CONFIRMED" && canCompleteBooking(b.date) && (
+                          <Button onClick={() => completeBooking(b.id)} className="bg-blue-600 hover:bg-blue-700 text-white w-full text-xs py-1" size="sm">
+                            Completar
+                          </Button>
+                        )}
+                        {b.status !== "CANCELLED" && b.status !== "COMPLETE" && (
                           <Button onClick={() => cancelBooking(b.id)} className="bg-red-600 hover:bg-red-700 text-white w-full text-xs py-1" size="sm">
                             Rechazar
                           </Button>

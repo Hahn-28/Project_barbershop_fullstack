@@ -1,16 +1,18 @@
 import { useState, useEffect } from "react";
 import { getRoleFromToken, getNameFromToken } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
-import { AdminBookingsList } from "./AdminBookingsList";
 import { CreateWorkerModal } from "./CreateWorkerModal";
 import { UsersList } from "./UsersList";
 import { ServicesList } from "./ServicesList";
+import { BookingEditModal } from "./BookingEditModal";
 import { useAdminBookings } from "@/lib/hooks/useAdminBookings";
 import { useCreateUser } from "@/lib/hooks/useCreateUser";
 import { useUsers } from "@/lib/hooks/useUsers";
 import { useServices } from "@/lib/hooks/useServices";
 import { Toaster } from "@/components/ui/sonner";
-import { RefreshCw, Users, Calendar, Plus, Wrench } from "lucide-react";
+import { Users, Calendar, Plus, Wrench } from "lucide-react";
+import { PersonalCalendar } from "@/components/PersonalCalendar";
+import type { EventInput } from "@fullcalendar/core";
 import type { NewUser } from "@/lib/hooks/useCreateUser";
 
 interface AdminDashboardProps {
@@ -20,8 +22,11 @@ interface AdminDashboardProps {
 export function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const [activeTab, setActiveTab] = useState<"dashboard" | "clientes" | "trabajadores" | "servicios" | "reservas">("dashboard");
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const [userFilter, setUserFilter] = useState("ALL");
+  const [workerFilter, setWorkerFilter] = useState("ALL");
   const [showCreateWorkerModal, setShowCreateWorkerModal] = useState(false);
-  const { bookings, loading, error, loadAllBookings, confirmBooking, cancelBooking } = useAdminBookings();
+  const [selectedBookingId, setSelectedBookingId] = useState<number | null>(null);
+  const { bookings, loading, error, loadAllBookings, confirmBooking, cancelBooking, updateBookingStatus } = useAdminBookings();
   const { users, loading: usersLoading, error: usersError, loadUsers, updateUserStatus } = useUsers();
   const { services, loading: servicesLoading, error: servicesError, loadServices, createService, updateService, deleteService } = useServices();
   const { creating, createUser } = useCreateUser();
@@ -64,6 +69,66 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const totalBookings = bookings.length;
   const pendingBookings = bookings.filter(b => b.status === 'PENDING').length;
   const confirmedBookings = bookings.filter(b => b.status === 'CONFIRMED').length;
+
+  // Obtener lista única de usuarios (clientes) con reservas
+  const usersWithBookings = Array.from(
+    new Map(
+      bookings
+        .filter(b => b.user)
+        .map(b => [b.user!.id, b.user!])
+    ).values()
+  );
+
+  // Obtener lista única de trabajadores con reservas
+  const workersWithBookings = Array.from(
+    new Map(
+      bookings
+        .filter(b => b.worker)
+        .map(b => [b.worker!.id, b.worker!])
+    ).values()
+  );
+
+  // Convertir reservas a eventos de calendario con filtros
+  const filteredBookings = bookings.filter(b => {
+    if (userFilter !== "ALL" && b.userId !== parseInt(userFilter)) {
+      return false;
+    }
+    if (workerFilter !== "ALL" && b.workerId !== parseInt(workerFilter)) {
+      return false;
+    }
+    if (statusFilter !== "ALL" && b.status !== statusFilter) {
+      return false;
+    }
+    return true;
+  });
+
+  const calendarEvents: EventInput[] = filteredBookings.map(b => {
+    const bookingDate = typeof b.date === 'string' ? b.date : b.date.toISOString();
+    const startDate = new Date(bookingDate);
+    const endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
+
+    return {
+      id: String(b.id),
+      title: b.service?.name || 'Reserva',
+      start: bookingDate,
+      end: endDate.toISOString(),
+      allDay: false,
+      extendedProps: {
+        status: b.status,
+        clientName: b.user?.name,
+        workerName: b.worker?.name,
+      }
+    };
+  });
+
+  // Obtener la reserva seleccionada
+  const selectedBooking = selectedBookingId 
+    ? bookings.find(b => b.id === selectedBookingId)
+    : null;
+
+  const handleEditBooking = (bookingId: string) => {
+    setSelectedBookingId(parseInt(bookingId));
+  };
 
   return (
     <>
@@ -301,33 +366,68 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
           )}
 
           {activeTab === "reservas" && (
-            <div className="space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4">
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="bg-gray-dark border border-gray-light/30 text-white px-4 py-2 rounded-lg"
-                >
-                  <option value="ALL">Todos</option>
-                  <option value="PENDING">Pendiente</option>
-                  <option value="CONFIRMED">Confirmada</option>
-                  <option value="CANCELLED">Cancelada</option>
-                </select>
-                <Button onClick={loadAllBookings} className="bg-gold text-dark hover:bg-gold/90 ml-auto">
-                  <RefreshCw className="w-4 h-4 mr-2" />
-                  Actualizar
-                </Button>
+            <div className="space-y-6">
+              {/* Filtros */}
+              <div className="bg-gray-dark/60 backdrop-blur-sm border border-gray-light/10 rounded-2xl p-6 shadow-xl">
+                <h3 className="text-white text-lg font-bold mb-4">Filtros</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-gray-400 text-sm mb-2">Filtrar por Estado</label>
+                    <select
+                      value={statusFilter}
+                      onChange={(e) => setStatusFilter(e.target.value)}
+                      className="w-full bg-gray-dark border border-gray-light/30 text-white px-4 py-2 rounded-lg focus:ring-2 focus:ring-gold/50 transition"
+                    >
+                      <option value="ALL">Todos</option>
+                      <option value="PENDING">Pendiente</option>
+                      <option value="CONFIRMED">Confirmada</option>
+                      <option value="COMPLETE">Completada</option>
+                      <option value="CANCELLED">Cancelada</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-gray-400 text-sm mb-2">Filtrar por Cliente</label>
+                    <select
+                      value={userFilter}
+                      onChange={(e) => setUserFilter(e.target.value)}
+                      className="w-full bg-gray-dark border border-gray-light/30 text-white px-4 py-2 rounded-lg focus:ring-2 focus:ring-gold/50 transition"
+                    >
+                      <option value="ALL">Ver Todos</option>
+                      {usersWithBookings.map(user => (
+                        <option key={user.id} value={String(user.id)}>
+                          {user.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-gray-400 text-sm mb-2">Filtrar por Trabajador</label>
+                    <select
+                      value={workerFilter}
+                      onChange={(e) => setWorkerFilter(e.target.value)}
+                      className="w-full bg-gray-dark border border-gray-light/30 text-white px-4 py-2 rounded-lg focus:ring-2 focus:ring-gold/50 transition"
+                    >
+                      <option value="ALL">Ver Todos</option>
+                      {workersWithBookings.map(worker => (
+                        <option key={worker.id} value={String(worker.id)}>
+                          {worker.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
               </div>
 
-              <AdminBookingsList
-                bookings={bookings}
-                loading={loading}
-                error={error}
-                statusFilter={statusFilter}
-                onRefresh={loadAllBookings}
-                onConfirm={confirmBooking}
-                onCancel={cancelBooking}
-              />
+              {/* Calendario */}
+              <div className="bg-gray-dark/60 backdrop-blur-sm border border-gray-light/10 rounded-2xl p-6 shadow-xl h-[700px]">
+                <div className="h-full overflow-hidden">
+                  <PersonalCalendar 
+                    bookings={calendarEvents}
+                    title="Calendario de Reservas"
+                    onEventClick={handleEditBooking}
+                  />
+                </div>
+              </div>
             </div>
           )}
         </div>
@@ -339,6 +439,14 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
         isLoading={creating}
         onClose={() => setShowCreateWorkerModal(false)}
         onSubmit={handleCreateWorker}
+      />
+
+      {/* Modal para editar reserva */}
+      <BookingEditModal
+        isOpen={selectedBookingId !== null}
+        booking={selectedBooking as any}
+        onClose={() => setSelectedBookingId(null)}
+        onStatusChange={updateBookingStatus}
       />
     </>
   );

@@ -8,9 +8,10 @@ import type { EventInput } from '@fullcalendar/core';
 interface PersonalCalendarProps {
   readonly bookings: EventInput[];
   readonly title?: string;
+  readonly onEventClick?: (eventId: string) => void;
 }
 
-export function PersonalCalendar({ bookings, title = "Mi Calendario" }: PersonalCalendarProps) {
+export function PersonalCalendar({ bookings, title = "Mi Calendario", onEventClick }: PersonalCalendarProps) {
   const calendarRef = useRef<FullCalendar>(null);
 
   return (
@@ -18,10 +19,14 @@ export function PersonalCalendar({ bookings, title = "Mi Calendario" }: Personal
       <h3 className="text-white text-lg font-semibold mb-2 pb-2 border-b border-gold/30">
         {title}
       </h3>
-      <div className="flex gap-6 mb-4 text-xs">
+      <div className="flex gap-6 mb-4 text-xs flex-wrap">
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 rounded bg-green-500"></div>
           <span className="text-gray-300">Confirmada</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 rounded bg-blue-500"></div>
+          <span className="text-gray-300">Completada</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 rounded bg-yellow-500"></div>
@@ -56,9 +61,15 @@ export function PersonalCalendar({ bookings, title = "Mi Calendario" }: Personal
           eventDisplay="block"
           displayEventTime={true}
           displayEventEnd={false}
+          eventClick={(info) => {
+            if (onEventClick) {
+              onEventClick(info.event.id);
+            }
+          }}
           eventClassNames={(arg) => {
             const status = arg.event.extendedProps?.status;
             if (status === 'CONFIRMED') return ['event-confirmed'];
+            if (status === 'COMPLETE') return ['event-complete'];
             if (status === 'PENDING') return ['event-pending'];
             if (status === 'CANCELLED') return ['event-cancelled'];
             return [];
@@ -76,6 +87,7 @@ export function PersonalCalendar({ bookings, title = "Mi Calendario" }: Personal
                 {workerName && <div className="truncate opacity-90">Barbero: {workerName}</div>}
                 <div className="text-[10px] mt-1 opacity-75">
                   {status === 'CONFIRMED' && '✓ Confirmada'}
+                  {status === 'COMPLETE' && '✓ Completada'}
                   {status === 'PENDING' && '⏳ Pendiente'}
                   {status === 'CANCELLED' && '✗ Cancelada'}
                 </div>
@@ -143,6 +155,11 @@ export function PersonalCalendar({ bookings, title = "Mi Calendario" }: Personal
         .personal-calendar-container .event-confirmed {
           background-color: rgba(34, 197, 94, 0.9);
           border-color: rgb(34, 197, 94);
+          color: white;
+        }
+        .personal-calendar-container .event-complete {
+          background-color: rgba(59, 130, 246, 0.9);
+          border-color: rgb(59, 130, 246);
           color: white;
         }
         .personal-calendar-container .event-pending {

@@ -25,6 +25,7 @@ interface ProfileCardProps {
   bookingStats: {
     confirmed: number;
     pending: number;
+    complete: number;
     cancelled: number;
     total: number;
   };
@@ -217,6 +218,10 @@ export function ProfileCard({ onLogout, role, bookingStats }: ProfileCardProps) 
               <div className="bg-gray-dark/80 border border-gray-light/20 rounded-xl p-6">
                 <p className="text-gray-400 text-sm mb-2">Reservas Pendientes</p>
                 <p className="text-3xl font-bold text-yellow-500">{bookingStats.pending}</p>
+              </div>
+              <div className="bg-gray-dark/80 border border-gray-light/20 rounded-xl p-6">
+                <p className="text-gray-400 text-sm mb-2">Reservas Completadas</p>
+                <p className="text-3xl font-bold text-blue-500">{bookingStats.complete}</p>
               </div>
               <div className="bg-gray-dark/80 border border-gray-light/20 rounded-xl p-6">
                 <p className="text-gray-400 text-sm mb-2">Reservas Canceladas</p>

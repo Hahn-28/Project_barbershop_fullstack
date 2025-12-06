@@ -15,6 +15,7 @@ enum Role {
 enum Status {
   PENDING
   CONFIRMED
+  COMPLETE
   CANCELLED
 }
 

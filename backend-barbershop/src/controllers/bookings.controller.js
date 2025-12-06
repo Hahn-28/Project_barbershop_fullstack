@@ -175,7 +175,10 @@ export const updateBookingStatus = async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
 
-    if (!["PENDING", "CONFIRMED", "CANCELLED"].includes(status)) {
+    console.log("updateBookingStatus - Received:", { id, status, user: req.user });
+
+    if (!["PENDING", "CONFIRMED", "COMPLETE", "CANCELLED"].includes(status)) {
+      console.log("updateBookingStatus - Invalid status:", status);
       return errorResponse(res, "Invalid status", 400);
     }
 
@@ -183,6 +186,8 @@ export const updateBookingStatus = async (req, res) => {
       where: { id: parseInt(id) },
       include: { worker: true, user: true },
     });
+
+    console.log("updateBookingStatus - Found booking:", booking);
 
     if (!booking) {
       return errorResponse(res, "Booking not found", 404);
@@ -193,12 +198,14 @@ export const updateBookingStatus = async (req, res) => {
     const isWorkerOwner = req.user?.role === "WORKER" && booking.workerId === req.user.id;
     const isClientOwner = req.user?.role === "CLIENT" && booking.userId === req.user.id;
     
+    console.log("updateBookingStatus - Auth checks:", { isAdmin, isWorkerOwner, isClientOwner });
+
     if (!isAdmin && !isWorkerOwner && !isClientOwner) {
       return errorResponse(res, "Not authorized to update this booking", 403);
     }
 
-    // Clients can only cancel bookings, not confirm them
-    if (isClientOwner && status !== "CANCELLED") {
+    // Clients can only cancel bookings, not confirm or complete them
+    if (isClientOwner && !["CANCELLED"].includes(status)) {
       return errorResponse(res, "Clients can only cancel bookings", 403);
     }
 
@@ -207,12 +214,15 @@ export const updateBookingStatus = async (req, res) => {
       data: { status },
     });
 
+    console.log("updateBookingStatus - Success:", updatedBooking);
+
     return successResponse(
       res,
       updatedBooking,
       "Booking status updated successfully"
     );
   } catch (error) {
+    console.error("updateBookingStatus - Error:", error);
     return errorResponse(res, "Failed to update booking status", 500, error);
   }
 };
